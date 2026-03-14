@@ -1,0 +1,72 @@
+import { Hono } from "hono"
+
+import type { DB } from "@/db/client"
+import type { Storage } from "@/storage/client"
+import type { Bindings } from "@/config/env"
+import {injectDependencies} from "@/middleware/injectDependencies"
+import {requestLogger} from "@/middleware/request-logger"
+import {securityMiddleware} from "@/middleware/security"
+import {corsMiddleware} from "@/middleware/cors"
+import {errorHandler} from "@/middleware/error-handler"
+import {notFoundHandler} from "@/middleware/not-found"
+
+import { getConfig } from "@/config/env"
+
+import authRoutes from "@/modules/auth/auth.routes"
+
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
+
+type Variables = {
+  db: DB
+  storage: Storage
+}
+
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+/* -------------------------------------------------------------------------- */
+/* Global Middleware                                                          */
+/* -------------------------------------------------------------------------- */
+
+app.use("*", injectDependencies)
+app.use("*", requestLogger)
+app.use("*", securityMiddleware)
+app.use("*", corsMiddleware)
+
+/* -------------------------------------------------------------------------- */
+/* Routes                                                                     */
+/* -------------------------------------------------------------------------- */
+
+// Debug routes (development only)
+app.use("/api/debug/*", async (c, next) => {
+  const config = getConfig(c.env)
+  return config.isDev ? next() : c.notFound()
+})
+
+// Auth
+app.route("/api/auth", authRoutes)
+
+/* -------------------------------------------------------------------------- */
+/* System Routes                                                              */
+/* -------------------------------------------------------------------------- */
+
+app.get("/api/health", (c) =>
+  c.json({
+    success: true,
+    message: "Rin-chan API is healthy",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0",
+    runtime: "hono",
+    platform: "cloudflare-workers",
+  })
+)
+
+/* -------------------------------------------------------------------------- */
+/* Error Handling                                                             */
+/* -------------------------------------------------------------------------- */
+
+app.onError(errorHandler)
+app.notFound(notFoundHandler)
+
+export default app

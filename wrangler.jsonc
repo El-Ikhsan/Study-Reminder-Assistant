@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "backend-rinchan",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-12",
+  "compatibility_flags": [
+    "nodejs_compat" // ✨ WAJIB AKTIF untuk bcryptjs & utilitas lainnya
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET", // ✨ Samakan dengan nama binding di env.ts
+      "bucket_name": "rinchan-storage"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pomodoro_db",
+      "database_id": "xxxx-xxxx-xxxx",
+      "migrations_dir": "./drizzle" // ✨ Agar wrangler tahu lokasi migrasinya
+    }
+  ]
+}
