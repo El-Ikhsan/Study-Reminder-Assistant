@@ -1,9 +1,6 @@
 import { Hono } from "hono"
 
-import type { DB } from "@/db/client"
-import type { Storage } from "@/storage/client"
 import type { Bindings } from "@/config/env"
-import {injectDependencies} from "@/middleware/injectDependencies"
 import {requestLogger} from "@/middleware/request-logger"
 import {securityMiddleware} from "@/middleware/security"
 import {corsMiddleware} from "@/middleware/cors"
@@ -18,18 +15,14 @@ import authRoutes from "@/modules/auth/auth.routes"
 /* Types                                                                      */
 /* -------------------------------------------------------------------------- */
 
-type Variables = {
-  db: DB
-  storage: Storage
-}
 
-const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+const app = new Hono<{ Bindings: Bindings }>()
 
 /* -------------------------------------------------------------------------- */
 /* Global Middleware                                                          */
 /* -------------------------------------------------------------------------- */
 
-app.use("*", injectDependencies)
+
 app.use("*", requestLogger)
 app.use("*", securityMiddleware)
 app.use("*", corsMiddleware)
@@ -40,7 +33,7 @@ app.use("*", corsMiddleware)
 
 // Debug routes (development only)
 app.use("/api/debug/*", async (c, next) => {
-  const config = getConfig(c.env)
+  const config = getConfig()
   return config.isDev ? next() : c.notFound()
 })
 

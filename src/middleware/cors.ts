@@ -3,7 +3,7 @@ import { getConfig } from "@/config/env"
 import { Context, Next } from "hono"
 
 export const corsMiddleware = async (c: Context, next: Next) => {
-  const config = getConfig(c.env)
+  const config = getConfig()
 
   return cors({
     origin: config.cors.origin,

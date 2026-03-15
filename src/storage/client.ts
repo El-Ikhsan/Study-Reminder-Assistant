@@ -1,7 +1,13 @@
-import type { Bindings } from "@/config/env"
+import { getConfig } from "@/config/env"
+import type { R2Bucket } from "@cloudflare/workers-types"
 
-export const createR2 = (env: Bindings) => {
-  return env.MY_BUCKET
+/**
+ * Mengambil instance Storage (R2 Bucket) secara langsung
+ */
+export const getStorage = (): R2Bucket => {
+  const config = getConfig()
+  return config.bucket
 }
 
-export type Storage = ReturnType<typeof createR2>
+// Export tipe Storage agar bisa digunakan di Repository/Service
+export type Storage = R2Bucket

@@ -8,7 +8,7 @@
   ],
   "r2_buckets": [
     {
-      "binding": "BUCKET", // ✨ Samakan dengan nama binding di env.ts
+      "binding": "MY_BUCKET", // ✨ Samakan dengan nama binding di env.ts
       "bucket_name": "rinchan-storage"
     }
   ],

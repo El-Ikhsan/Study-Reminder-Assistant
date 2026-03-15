@@ -22,7 +22,7 @@ export const authMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
   
   try {
     // ✨ getConfig sekarang tahu c.env itu isinya Bindings
-    const config = getConfig(c.env)
+    const config = getConfig()
     const payload = await verifyAccessToken(token, config.jwt.secret)
     
     if (!payload) {
@@ -45,8 +45,8 @@ export const optionalAuthMiddleware = createMiddleware<AuthEnv>(async (c, next) 
   
   if (token) {
     try {
-      // ✨ PERBAIKAN: Gunakan getConfig(c.env) secara konsisten!
-      const config = getConfig(c.env)
+      // ✨ PERBAIKAN: Gunakan getConfig() secara konsisten!
+      const config = getConfig()
       const payload = await verifyAccessToken(token, config.jwt.secret)
       if (payload) {
         c.set('user', payload)

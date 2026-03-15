@@ -1,9 +1,14 @@
 import { drizzle } from "drizzle-orm/d1"
 import * as schema from "./schema"
-import type { Bindings } from "@/config/env"
+import { getConfig } from "@/config/env"
 
-export const createDB = (env: Bindings) => {
-  return drizzle(env.DB, { schema })
+/**
+ * Mengambil instance Drizzle DB secara langsung
+ */
+export const getDb = () => {
+  const config = getConfig()
+  return drizzle(config.db, { schema })
 }
 
-export type DB = ReturnType<typeof createDB>
+// Export tipe DB untuk keperluan type-hinting di Repo/Service
+export type DB = ReturnType<typeof getDb>
