@@ -1,6 +1,7 @@
 import { logger } from "@/utils/logger"
+import { createMiddleware } from "hono/factory"
 
-export const requestLogger = async (c, next) => {
+export const requestLogger = createMiddleware(async (c, next) => {
   const start = Date.now()
 
   await next()
@@ -14,4 +15,4 @@ export const requestLogger = async (c, next) => {
     duration: `${duration}ms`,
     userAgent: c.req.header("user-agent"),
   })
-}
+})

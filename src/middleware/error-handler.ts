@@ -1,8 +1,9 @@
 import { HTTPException } from "hono/http-exception"
 import { logger } from "@/utils/logger"
+import type { Context } from "hono"
 import { ResponseError } from "@/utils/responseError"
 
-export const errorHandler = (error, c) => {
+export const errorHandler = (error: unknown, c: Context) => {
   if (error instanceof ResponseError) {
     return c.json(
       { success: false, message: error.message },

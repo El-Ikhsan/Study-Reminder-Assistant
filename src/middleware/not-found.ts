@@ -1,4 +1,6 @@
-export const notFoundHandler = (c) =>
+import { createMiddleware } from "hono/factory"
+
+export const notFoundHandler = createMiddleware(async (c) =>
   c.json(
     {
       success: false,
@@ -7,4 +9,4 @@ export const notFoundHandler = (c) =>
       method: c.req.method,
     },
     404
-  )
+  ))

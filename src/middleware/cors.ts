@@ -1,7 +1,8 @@
 import { cors } from "hono/cors"
 import { getConfig } from "@/config/env"
+import { Context, Next } from "hono"
 
-export const corsMiddleware = async (c, next) => {
+export const corsMiddleware = async (c: Context, next: Next) => {
   const config = getConfig(c.env)
 
   return cors({
