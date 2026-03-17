@@ -1,0 +1,1 @@
+ALTER TABLE `devices` ADD `token_version` integer DEFAULT 1 NOT NULL;

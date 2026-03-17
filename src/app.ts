@@ -10,6 +10,8 @@ import {notFoundHandler} from "@/middleware/not-found"
 import { getConfig } from "@/config/env"
 
 import authRoutes from "@/modules/auth/auth.routes"
+import deviceRoutes from "./modules/device/device.routes"
+
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -39,6 +41,7 @@ app.use("/api/debug/*", async (c, next) => {
 
 // Auth
 app.route("/api/auth", authRoutes)
+app.route("/api/device", deviceRoutes)
 
 /* -------------------------------------------------------------------------- */
 /* System Routes                                                              */

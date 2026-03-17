@@ -90,3 +90,15 @@ export const isTokenExpired = (token: string): boolean => {
   
   return Date.now() >= payload.exp * 1000
 }
+
+export type IotTokenPayload = {
+  userId: string
+  deviceId: string
+  version: number
+  type: 'iot'
+}
+
+// ✨ Pembuat Token Permanen untuk Rin-chan
+export const generateIotToken = async (payload: Omit<IotTokenPayload, 'type'>, secret: string) => {
+  return await sign({ ...payload, type: 'iot' }, secret)
+}

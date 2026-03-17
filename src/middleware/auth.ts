@@ -1,27 +1,36 @@
 import { createMiddleware } from 'hono/factory'
-import { extractTokenFromHeader, verifyAccessToken, TokenPayload } from '@/utils/jwt'
+import { getCookie } from 'hono/cookie'
+import { extractTokenFromHeader, verifyAccessToken, type TokenPayload } from '@/utils/jwt'
 import { ResponseError } from '@/utils/responseError'
-import { getConfig, type Bindings } from '@/config/env' // Pastikan type Bindings di-import
+import { getConfig, type Bindings } from '@/config/env'
+import { findDeviceById } from '@/modules/device/device.repo'
 
-// 1. Deklarasikan tipe Variables DAN Bindings khusus untuk middleware ini
 type AuthEnv = {
-  Bindings: Bindings // ✨ Tambahkan ini agar c.env dikenali oleh getConfig!
+  Bindings: Bindings
   Variables: {
     user: TokenPayload
   }
 }
 
-// 2. Gunakan createMiddleware agar Hono tahu 'c.set' dan 'c.get' aman
+/**
+ * Standard Auth Middleware (Support Header & Cookie)
+ */
 export const authMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
   const authHeader = c.req.header('authorization')
-  const token = extractTokenFromHeader(authHeader)
+  
+  // 1. Coba ambil dari Header dulu
+  let token: any = extractTokenFromHeader(authHeader)
+  
+  // 2. Jika header kosong, coba ambil dari Cookie 'authToken'
+  if (!token) {
+    token = getCookie(c, 'authToken')
+  }
   
   if (!token) {
     throw new ResponseError(401, 'Akses token tidak ditemukan. Silakan login kembali.')
   }
   
   try {
-    // ✨ getConfig sekarang tahu c.env itu isinya Bindings
     const config = getConfig()
     const payload = await verifyAccessToken(token, config.jwt.secret)
     
@@ -29,32 +38,41 @@ export const authMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
       throw new ResponseError(401, 'Akses token tidak valid atau sudah kadaluarsa.')
     }
     
-    // Simpan ke context. TypeScript sekarang tahu 'user' itu ada!
     c.set('user', payload)
-    
     await next()
   } catch (error) {
     throw new ResponseError(401, 'Sesi telah berakhir atau token tidak valid.')
   }
 })
 
-// Optional auth middleware
-export const optionalAuthMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
+export const deviceAuthMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
   const authHeader = c.req.header('authorization')
-  const token = extractTokenFromHeader(authHeader)
-  
-  if (token) {
-    try {
-      // ✨ PERBAIKAN: Gunakan getConfig() secara konsisten!
-      const config = getConfig()
-      const payload = await verifyAccessToken(token, config.jwt.secret)
-      if (payload) {
-        c.set('user', payload)
+  const queryToken = c.req.query('token')
+  const token = extractTokenFromHeader(authHeader) || queryToken
+
+  if (!token) throw new ResponseError(401, 'Device unauthorized: Token missing.')
+
+  try {
+    const config = getConfig()
+    const payload = await verifyAccessToken(token, config.jwt.secret) as any
+    
+    if (payload.type === 'iot' && payload.deviceId) {
+      const device = await findDeviceById(payload.deviceId)
+      
+      if (!device || device.tokenVersion !== payload.version) {
+
+        throw new ResponseError(401, 'Device unauthorized: Token revoked or device deleted.')
       }
-    } catch (error) {
-      console.warn('Optional auth token invalid:', error)
     }
+
+    c.set('user', payload)
+    await next()
+  } catch (error) {
+    //  Jika error-nya adalah ResponseError buatan kita, langsung lempar!
+    if (error instanceof ResponseError) {
+      throw error; 
+    }
+
+    throw new ResponseError(401, 'Device unauthorized: Invalid token format.')
   }
-  
-  await next()
 })

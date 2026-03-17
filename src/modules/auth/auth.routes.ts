@@ -17,7 +17,7 @@ router.post('/register', registerUser)
 router.post('/login', login)
 router.post('/refresh', refreshToken)
 
-router.post('/get-user', authMiddleware, getUserProfile)
+router.get('/get-user', authMiddleware, getUserProfile)
 router.post("/update", authMiddleware, updateUser)
 router.post('/add-avatar', authMiddleware, addAvatar)
 router.post('/remove-avatar', authMiddleware, removeAvatar)

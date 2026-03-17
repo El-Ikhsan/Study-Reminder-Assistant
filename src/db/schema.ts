@@ -12,8 +12,10 @@ export const users = sqliteTable("users", {
 
 export const devices = sqliteTable("devices", {
   id: text("id").primaryKey(),
+  uuid: text("uuid").notNull().unique(),
   userId: text("user_id").references(() => users.id).notNull(),
   deviceName: text("device_name").notNull(),
+  tokenVersion: integer("token_version").default(1).notNull(),
   status: text("status", { enum: ["online", "offline"] }).default("offline"),
   lastSeen: integer("last_seen", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
