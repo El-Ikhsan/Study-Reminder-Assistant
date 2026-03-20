@@ -19,5 +19,19 @@
       "database_id": "xxxx-xxxx-xxxx",
       "migrations_dir": "./drizzle" // ✨ Agar wrangler tahu lokasi migrasinya
     }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DEVICE_ROOM",
+        "class_name": "DeviceRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["DeviceRoom"]
+    }
   ]
 }

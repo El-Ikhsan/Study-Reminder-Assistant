@@ -8,11 +8,14 @@ const envStringSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(1, "JWT_REFRESH_SECRET wajib diisi"),
   CORS_ORIGIN: z.string().default('*'),
   R2_PUBLIC_URL: z.string().min(1, "R2_PUBLIC_URL wajib diisi"),
+  RINCHAN_MODEL_URL: z.string().min(1, "RINCHAN_MODEL_URL wajib diisi"),
+  STT_MODEL_URL: z.string().min(1, "STT_MODEL_URL wajib diisi")
 })
 
 export type Bindings = z.infer<typeof envStringSchema> & {
   DB: D1Database
   MY_BUCKET: R2Bucket
+  DEVICE_ROOM: DurableObjectNamespace
 }
 
 export type AppConfig = {
@@ -26,6 +29,10 @@ export type AppConfig = {
   }
   r2: {
     publicUrl: string
+  }
+  ai: {
+    rinchanUrl: string
+    STTUrl: string
   }
   db: D1Database
   bucket: R2Bucket
@@ -66,6 +73,10 @@ export const getConfig = (): AppConfig => {
     },
     r2: {
       publicUrl: `https://${workerEnv.R2_PUBLIC_URL}.r2.cloudflarestorage.com`
+    },
+    ai: {
+      rinchanUrl: parsedStringCache.RINCHAN_MODEL_URL,
+      STTUrl: parsedStringCache.STT_MODEL_URL, // Asumsi endpoint sama untuk STT, bisa disesuaikan jika berbeda
     },
     // DB dan Bucket diambil langsung dari workerEnv yang segar
     db: workerEnv.DB,

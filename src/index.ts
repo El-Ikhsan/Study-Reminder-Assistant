@@ -10,3 +10,5 @@ export default {
     return app.fetch(request, env, ctx)
   },
 }
+
+export { DeviceRoom } from './modules/websocket/DeviceRoom'

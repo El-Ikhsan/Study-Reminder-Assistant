@@ -10,8 +10,9 @@ import {notFoundHandler} from "@/middleware/not-found"
 import { getConfig } from "@/config/env"
 
 import authRoutes from "@/modules/auth/auth.routes"
-import deviceRoutes from "./modules/device/device.routes"
-
+import deviceRoutes from "@/modules/device/device.routes"
+import wsRoutes from "@/modules/websocket/ws.routes"
+import pomodoroRoutes from "./modules/pomodoro/pomodoro.routes"
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -42,7 +43,8 @@ app.use("/api/debug/*", async (c, next) => {
 // Auth
 app.route("/api/auth", authRoutes)
 app.route("/api/device", deviceRoutes)
-
+app.route("/api/ws", wsRoutes)
+app.route("/api/pomodoro", pomodoroRoutes) 
 /* -------------------------------------------------------------------------- */
 /* System Routes                                                              */
 /* -------------------------------------------------------------------------- */

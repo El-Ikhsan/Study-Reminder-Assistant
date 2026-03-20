@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core"
 import { sql } from "drizzle-orm"
 
 export const users = sqliteTable("users", {
@@ -36,13 +36,26 @@ export const pomodoroSessions = sqliteTable("pomodoro_sessions", {
   endedAt: integer("ended_at", { mode: "timestamp" }),
 })
 
-export const sensorTelemetry = sqliteTable("sensor_telemetry", {
-  id: text("id").primaryKey(),
-  deviceId: text("device_id").references(() => devices.id).notNull(),
-  temperature: integer("temperature"),
-  lightLux: integer("light_lux"),
-  noiseLevel: integer("noise_level"),
-  recordedAt: integer("recorded_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
+export const sensorTelemetry = sqliteTable('sensor_telemetry', {
+  id: text('id').primaryKey(),
+  deviceId: text('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+  temperature: real('temperature').notNull(),
+  lightLux: real('light_lux').notNull(),
+  noiseLevel: real('noise_level').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
+})
+
+export const rinchanLogs = sqliteTable('rinchan_logs', {
+  id: text('id').primaryKey(),
+  deviceId: text('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+  triggerContext: text('trigger_context').notNull(), // Contoh: "suhu ruangan panas", atau "fase tengah fokus"
+  aiResponse: text('ai_response').notNull(),         // Teks yang diucapkan AI
+  emotion: text('emotion').notNull(),                // Mimik wajah saat kejadian
+  // Snapshot sensor saat Rin-chan ngomel (Boleh null kalau trigger-nya dari Pomodoro Time)
+  temperatureAtTime: real('temperature_at_time'),
+  lightAtTime: real('light_at_time'),
+  noiseAtTime: real('noise_at_time'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
 })
 
 export const interactions = sqliteTable("interactions", {
