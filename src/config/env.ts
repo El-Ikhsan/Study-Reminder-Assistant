@@ -72,7 +72,7 @@ export const getConfig = (): AppConfig => {
       origin: parsedStringCache.CORS_ORIGIN.split(',').map(o => o.trim()),
     },
     r2: {
-      publicUrl: `https://${workerEnv.R2_PUBLIC_URL}.r2.cloudflarestorage.com`
+      publicUrl: `${workerEnv.R2_PUBLIC_URL}`
     },
     ai: {
       rinchanUrl: parsedStringCache.RINCHAN_MODEL_URL,
