@@ -2,10 +2,16 @@ import { eq } from 'drizzle-orm'
 import { devices, sensorTelemetry } from '@/db/schema'
 import { getDb } from '@/db/client'
 
-export const findDeviceByUuid = async (uuid: string) => {
+export const findDeviceByRinchanId = async (rinchanId: string) => {
   const db = getDb()
-  const result = await db.select().from(devices).where(eq(devices.uuid, uuid)).limit(1)
+  const result = await db.select().from(devices).where(eq(devices.rinchanId, rinchanId)).limit(1)
   return result[0] || null
+}
+
+export const insertRinchanId = async (data: { id: string, rinchanId: string, status: 'unclaimed' }) => {
+  const db = getDb()
+  const result = await db.insert(devices).values(data).returning()
+  return result[0]
 }
 
 export const insertDevice = async (data: typeof devices.$inferInsert) => {
