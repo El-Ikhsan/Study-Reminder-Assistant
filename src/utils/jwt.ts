@@ -16,14 +16,14 @@ export interface JWTTokens {
 
 // ✨ Fungsi sekarang ASYNC dan meminta 'secret' dari luar
 export const generateAccessToken = async (payload: object, secret: string): Promise<string> => {
-  // Tambahkan kadaluarsa 15 menit dari sekarang (dalam detik)
-  const exp = Math.floor(Date.now() / 1000) + (15 * 60)
+  // Tambahkan kadaluarsa 24 jam dari sekarang (dalam detik)
+  const exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60)
   return await sign({ ...payload, exp }, secret)
 }
 
 export const generateRefreshToken = async (payload: object, secret: string): Promise<string> => {
-  // Tambahkan kadaluarsa 7 hari (dalam detik)
-  const exp = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
+  // Tambahkan kadaluarsa 14 hari (dalam detik)
+  const exp = Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60)
   return await sign({ ...payload, exp }, secret)
 }
 
