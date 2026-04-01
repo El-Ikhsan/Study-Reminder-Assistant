@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1773514913880,
-      "tag": "0000_mean_boomer",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1773588317970,
-      "tag": "0001_whole_bulldozer",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1773593870857,
-      "tag": "0002_jittery_grim_reaper",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1773854848603,
-      "tag": "0003_small_marvel_apes",
+      "when": 1774965714217,
+      "tag": "0000_loose_nicolaos",
       "breakpoints": true
     }
   ]

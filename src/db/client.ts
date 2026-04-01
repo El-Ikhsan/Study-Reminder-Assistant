@@ -10,5 +10,13 @@ export const getDb = () => {
   return drizzle(config.db, { schema })
 }
 
-// Export tipe DB untuk keperluan type-hinting di Repo/Service
+/**
+ * digunakan khusus untuk Durable Object, 
+ * karena kita perlu passing env dari constructor DO ke repo 
+ * agar bisa akses D1 Binding. Jangan dipakai di luar konteks DO!
+ */
+export const getDbForDO = (env: any) => {
+  return drizzle(env.DB, { schema }) 
+}
+
 export type DB = ReturnType<typeof getDb>

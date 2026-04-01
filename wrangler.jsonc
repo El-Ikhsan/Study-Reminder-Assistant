@@ -6,14 +6,14 @@
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
-   "vars": {
-     "CORS_ORIGIN": "*",
-     "NODE_ENV": "production",
-     "R2_PUBLIC_URL": "https://pub-2f6c25df87d34b99b37b8bb898a5a1be.r2.dev"
-  },
+	"vars": {
+		"CORS_ORIGIN": "*",
+		"NODE_ENV": "production",
+		"R2_PUBLIC_URL": "https://pub-2f6c25df87d34b99b37b8bb898a5a1be.r2.dev"
+	},
 	"r2_buckets": [
 		{
-			"binding": "MY_BUCKET", 
+			"binding": "MY_BUCKET",
 			"bucket_name": "rinchan-storage"
 		},
 	],
@@ -21,7 +21,7 @@
 		{
 			"binding": "DB",
 			"database_name": "rinchan-db",
-			"database_id": "779ae5ea-1e2d-4efb-b306-e80e3d127b0f",
+			"database_id": "f47c6987-dff5-41aa-bb38-cf79d08d5d2c",
 			"migrations_dir": "./drizzle"
 		}
 	],
@@ -30,7 +30,7 @@
 			{
 				"name": "DEVICE_ROOM",
 				"class_name": "DeviceRoom"
-			} 
+			}
 		]
 	},
 	"migrations": [

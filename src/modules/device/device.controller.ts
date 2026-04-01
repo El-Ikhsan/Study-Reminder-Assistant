@@ -4,8 +4,8 @@ import * as deviceService from './device.service'
 import { claimDeviceSchema, telemetrySchema, claimStatusCheckSchema } from './device.validation'
 
 export const checkClaimStatus = async (c: Context) => {
- c.req.param('rinchan-id')
- const rinchanIdData = await validateBody(c, claimStatusCheckSchema)
+ const rinchanId = c.req.param('rinchan-id') 
+ const rinchanIdData = claimStatusCheckSchema.parse({ rinchanId: rinchanId })
 
  const result = await deviceService.checkClaimStatus(rinchanIdData.rinchanId)
  return c.json({

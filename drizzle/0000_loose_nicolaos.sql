@@ -1,13 +1,16 @@
 CREATE TABLE `devices` (
 	`id` text PRIMARY KEY NOT NULL,
-	`user_id` text NOT NULL,
-	`device_name` text NOT NULL,
-	`status` text DEFAULT 'offline',
+	`uuid` text NOT NULL,
+	`user_id` text,
+	`device_name` text DEFAULT 'Unnamed Device' NOT NULL,
+	`token_version` integer DEFAULT 1 NOT NULL,
+	`status` text DEFAULT 'unclaimed',
 	`last_seen` integer,
 	`created_at` integer DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `devices_uuid_unique` ON `devices` (`uuid`);--> statement-breakpoint
 CREATE TABLE `interactions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`device_id` text NOT NULL,
@@ -44,14 +47,27 @@ CREATE TABLE `refresh_tokens` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `refresh_tokens_token_unique` ON `refresh_tokens` (`token`);--> statement-breakpoint
+CREATE TABLE `rinchan_logs` (
+	`id` text PRIMARY KEY NOT NULL,
+	`device_id` text NOT NULL,
+	`trigger_context` text NOT NULL,
+	`ai_response` text NOT NULL,
+	`emotion` text NOT NULL,
+	`temperature_at_time` real,
+	`light_at_time` real,
+	`noise_at_time` real,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `sensor_telemetry` (
 	`id` text PRIMARY KEY NOT NULL,
 	`device_id` text NOT NULL,
-	`temperature` integer,
-	`light_lux` integer,
-	`noise_level` integer,
-	`recorded_at` integer DEFAULT CURRENT_TIMESTAMP,
-	FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON UPDATE no action ON DELETE no action
+	`temperature` real NOT NULL,
+	`light_lux` real NOT NULL,
+	`noise_level` real NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `users` (
