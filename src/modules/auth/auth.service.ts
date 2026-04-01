@@ -1,6 +1,6 @@
 import * as authRepo from './auth.repo'
 import { hashPassword, comparePassword } from '@/utils/password'
-import { generateTokens, verifyRefreshToken } from '@/utils/jwt'
+import { generateTokens, TokenPayload } from '@/utils/jwt'
 import { ResponseError } from '@/utils/responseError'
 import { getConfig } from '@/config/env' // 
 import type { RegisterInput, LoginInput, UpdateUserInput } from './auth.validation'
@@ -63,28 +63,26 @@ export const loginUser = async (data: LoginInput) => {
   return { user: userWithoutPassword, tokens }
 }
 
-export const refreshUserToken = async (oldToken: string) => {
+export const refreshUserToken = async (user: TokenPayload, oldToken: string) => {
   const config = getConfig()
-  const payload = await verifyRefreshToken(oldToken, config.jwt.refreshSecret)
-  if (!payload) throw new ResponseError(401, 'Refresh token tidak valid.')
+  const payload = await authRepo.findRefreshToken(oldToken)
+  if (!payload)  throw new ResponseError(401, 'Refresh token tidak valid atau sudah kadaluarsa.')
 
-  const storedToken = await authRepo.findRefreshToken(oldToken)
-  if (!storedToken) throw new ResponseError(401, 'Sesi telah berakhir.')
+  if (payload.userId !== user.userId) {
+    throw new ResponseError(401, 'Refresh token tidak valid untuk pengguna ini.')
+  }
 
   await authRepo.deleteRefreshToken(oldToken)
 
-  const user = await authRepo.findUserById(payload.userId)
-  if (!user) throw new ResponseError(404, 'User tidak ditemukan.')
-
   const tokens = await generateTokens(
-    { userId: user.id, email: user.email },
+    { userId: user.userId, email: user.email },
     config.jwt.secret,
     config.jwt.refreshSecret
   )
 
   await authRepo.saveRefreshToken({
     id: crypto.randomUUID(),
-    userId: user.id,
+    userId: user.userId,
     token: tokens.refreshToken,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   })

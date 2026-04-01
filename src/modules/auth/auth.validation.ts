@@ -18,11 +18,6 @@ export const loginSchema = z.object({
     .min(1, 'Password wajib diisi.') // Saat login, cukup pastikan tidak kosong
 })
 
-export const refreshTokenSchema = z.object({
-  refreshToken: z.string()
-    .min(1, 'Refresh token wajib disertakan.')
-})
-
 export const updateUserSchema = z.object({
   name: z.string().min(2, 'Nama minimal 2 karakter.').max(100).optional(),
   email: z.string().email('Format email tidak valid.').optional(),
@@ -40,4 +35,3 @@ export const updateUserSchema = z.object({
 export type UpdateUserInput = z.infer<typeof updateUserSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
-export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>

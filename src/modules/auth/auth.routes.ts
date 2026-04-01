@@ -9,13 +9,13 @@ import {
   removeAvatar,
   updateUser
 } from './auth.controller'
-import { authMiddleware } from '@/middleware/auth'
+import { authMiddleware, refreshTokenMiddleware } from '@/middleware/auth'
 
 const router = new Hono()
 
 router.post('/register', registerUser)
 router.post('/login', login)
-router.post('/refresh', refreshToken)
+router.post('/refresh', refreshTokenMiddleware, refreshToken)
 
 router.get('/get-user', authMiddleware, getUserProfile)
 router.post("/update", authMiddleware, updateUser)

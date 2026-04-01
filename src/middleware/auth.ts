@@ -1,6 +1,6 @@
 import { createMiddleware } from 'hono/factory'
 import { getCookie } from 'hono/cookie'
-import { extractTokenFromHeader, verifyAccessToken, type TokenPayload } from '@/utils/jwt'
+import { extractTokenFromHeader, verifyAccessToken, verifyRefreshToken, type TokenPayload } from '@/utils/jwt'
 import { ResponseError } from '@/utils/responseError'
 import { getConfig, type Bindings } from '@/config/env'
 import { findDeviceById } from '@/modules/device/device.repo'
@@ -9,6 +9,7 @@ type AuthEnv = {
   Bindings: Bindings
   Variables: {
     user: TokenPayload
+    refreshToken: string
   }
 }
 
@@ -38,6 +39,35 @@ export const authMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
       throw new ResponseError(401, 'Akses token tidak valid atau sudah kadaluarsa.')
     }
     
+    c.set('user', payload)
+    await next()
+  } catch (error) {
+    throw new ResponseError(401, 'Sesi telah berakhir atau token tidak valid.')
+  }
+})
+
+export const refreshTokenMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
+  // 1. Coba ambil dari Header dulu
+  let token= c.req.header('X-Refresh-Token')
+  
+  // 2. Jika header kosong, coba ambil dari Cookie 'authToken'
+  if (!token) {
+    token = getCookie(c, 'refreshToken')
+  }
+  
+  if (!token) {
+    throw new ResponseError(401, 'Refresh token tidak ditemukan. Silakan login kembali.')
+  }
+  
+  try {
+    const config = getConfig()
+    const payload = await verifyRefreshToken(token, config.jwt.refreshSecret)
+    
+    if (!payload) {
+      throw new ResponseError(401, 'Refresh token tidak valid atau sudah kadaluarsa.')
+    }
+    
+    c.set('refreshToken', token)
     c.set('user', payload)
     await next()
   } catch (error) {
