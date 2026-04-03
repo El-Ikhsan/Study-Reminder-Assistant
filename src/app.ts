@@ -14,6 +14,7 @@ import deviceRoutes from "@/modules/device/device.routes"
 import wsRoutes from "@/modules/websocket/ws.routes"
 import pomodoroRoutes from "@/modules/pomodoro/pomodoro.routes"
 import sensorRoutes from '@/modules/sensor/sensor.routes'
+import userRoutes from '@/modules/user/user.routes'
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -43,6 +44,7 @@ app.use("/api/debug/*", async (c, next) => {
 
 // Auth
 app.route("/api/auth", authRoutes)
+app.route('/api/user', userRoutes)
 app.route("/api/device", deviceRoutes)
 app.route("/api/ws", wsRoutes)
 app.route("/api/pomodoro", pomodoroRoutes) 

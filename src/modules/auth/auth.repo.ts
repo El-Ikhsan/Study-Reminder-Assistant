@@ -1,8 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { users, refreshTokens } from '@/db/schema'
-import { getDb } from '@/db/client' // ✨ Asumsi helper untuk ambil instance DB
-import { getStorage } from "@/storage/client" // ✨ Asumsi helper untuk ambil instance R2
-
+import { getDb } from '@/db/client'
 
 // --- USER REPOSITORY ---
 
@@ -23,11 +21,6 @@ export const createUser = async (userData: typeof users.$inferInsert) => {
   const result = await db.insert(users).values(userData).returning()
   return result[0]
 }
-export type UserUpdatePayload = Partial<typeof users.$inferInsert>
-export const updateUserData = async (userId: string, data: Partial<typeof users.$inferInsert>) => {
-  const db = getDb()
-  await db.update(users).set(data).where(eq(users.id, userId))
-}
 
 // --- REFRESH TOKEN REPOSITORY ---
 
@@ -47,21 +40,8 @@ export const deleteRefreshToken = async (token: string) => {
   await db.delete(refreshTokens).where(eq(refreshTokens.token, token))
 }
 
-// --- AVATAR & STORAGE REPOSITORY ---
-
-export const updateUserAvatarUrl = async (userId: string, url: string | null) => {
+export const deleteRefreshTokensByUserId = async (userId: string) => {
   const db = getDb()
-  await db.update(users).set({ avatarUrl: url }).where(eq(users.id, userId))
+  await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId))
 }
 
-export const uploadFileToR2 = async (fileName: string, file: File) => {
-  const bucket = getStorage()
-  await bucket.put(fileName, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type }
-  })
-}
-
-export const deleteFileFromR2 = async (fileName: string) => {
-  const bucket = getStorage()
-  await bucket.delete(fileName)
-}

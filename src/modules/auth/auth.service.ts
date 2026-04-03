@@ -1,13 +1,11 @@
 import * as authRepo from './auth.repo'
 import { hashPassword, comparePassword } from '@/utils/password'
-import { generateTokens, TokenPayload } from '@/utils/jwt'
+import { generateAccessToken, generateTokens, TokenPayload } from '@/utils/jwt'
 import { ResponseError } from '@/utils/responseError'
-import { getConfig } from '@/config/env' // 
-import type { RegisterInput, LoginInput, UpdateUserInput } from './auth.validation'
-import type { UserUpdatePayload } from './auth.repo'
+import { getConfig } from '@/config/env'
+import type { RegisterInput, LoginInput } from './auth.validation'
 
 export const registerUser = async (data: RegisterInput) => {
-  const config = getConfig() // 🎯 Ambil config di sini
   const existingUser = await authRepo.findUserByEmail(data.email)
   if (existingUser) throw new ResponseError(400, 'Email ini sudah terdaftar.')
 
@@ -21,21 +19,8 @@ export const registerUser = async (data: RegisterInput) => {
     password: hashedPassword,
   })
 
-  const tokens = await generateTokens(
-    { userId: newUser.id, email: newUser.email },
-    config.jwt.secret,
-    config.jwt.refreshSecret
-  )
-
-  await authRepo.saveRefreshToken({
-    id: crypto.randomUUID(),
-    userId: newUser.id,
-    token: tokens.refreshToken,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  })
-
   const { password, ...userWithoutPassword } = newUser
-  return { user: userWithoutPassword, tokens }
+  return { user: userWithoutPassword}
 }
 
 export const loginUser = async (data: LoginInput) => {
@@ -45,7 +30,9 @@ export const loginUser = async (data: LoginInput) => {
 
   const isMatch = await comparePassword(data.password, user.password)
   if (!isMatch) throw new ResponseError(401, 'Email atau password salah.')
-
+  
+  await authRepo.deleteRefreshTokensByUserId(user.id)
+  
   const tokens = await generateTokens(
     { userId: user.id, email: user.email },
     config.jwt.secret,
@@ -72,94 +59,15 @@ export const refreshUserToken = async (user: TokenPayload, oldToken: string) => 
     throw new ResponseError(401, 'Refresh token tidak valid untuk pengguna ini.')
   }
 
-  await authRepo.deleteRefreshToken(oldToken)
-
-  const tokens = await generateTokens(
+  const tokens = await generateAccessToken(
     { userId: user.userId, email: user.email },
     config.jwt.secret,
-    config.jwt.refreshSecret
   )
 
-  await authRepo.saveRefreshToken({
-    id: crypto.randomUUID(),
-    userId: user.userId,
-    token: tokens.refreshToken,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  })
-
-  return tokens
+  return { accessToken: tokens }
 }
 
-export const updateUser = async (userId: string, data: UpdateUserInput) => {
-  const updatePayload: UserUpdatePayload = {}
-
-  if (data.email) {
-    const existing = await authRepo.findUserByEmail(data.email)
-    if (existing && existing.id !== userId) {
-      throw new ResponseError(400, 'Email sudah digunakan.')
-    }
-    updatePayload.email = data.email
-  }
-
-  if (data.name) updatePayload.name = data.name
-
-  if (data.newPassword && data.oldPassword) {
-    const user = await authRepo.findUserById(userId)
-    if (!user) throw new ResponseError(404, 'User tidak ditemukan.')
-
-    const isMatch = await comparePassword(data.oldPassword, user.password)
-    if (!isMatch) throw new ResponseError(400, 'Password lama tidak sesuai.')
-
-    updatePayload.password = await hashPassword(data.newPassword)
-  }
-
-  if (Object.keys(updatePayload).length > 0) {
-    await authRepo.updateUserData(userId, updatePayload)
-  }
-
-  const updatedUser = await authRepo.findUserById(userId)
-  if (!updatedUser) throw new ResponseError(404, 'User tidak ditemukan.')
-
-  const { password, ...userProfile } = updatedUser
-  return userProfile
-}
-
-export const getUserProfile = async (userId: string) => {
-  const user = await authRepo.findUserById(userId)
-  if (!user) throw new ResponseError(404, 'User tidak ditemukan.')
-  const { password, ...userProfile } = user
-  return userProfile
-}
-
-export const logoutUser = async (refreshToken: string) => {
-  await authRepo.deleteRefreshToken(refreshToken)
-  return { success: true }
-}
-
-export const uploadUserAvatar = async (userId: string, file: File) => {
-  const config = getConfig()
-  if (!file.type.startsWith('image/')) throw new ResponseError(400, 'File tidak valid.')
-
-  const ext = file.name.split('.').pop()
-  const fileName = `avatars/${userId}-${Date.now()}.${ext}`
-
-  await authRepo.uploadFileToR2(fileName, file)
-
-  const publicUrl = `${config.r2.publicUrl}/${fileName}` 
-  await authRepo.updateUserAvatarUrl(userId, publicUrl)
-
-  return { avatarUrl: publicUrl }
-}
-
-export const removeUserAvatar = async (userId: string) => {
-  const user = await authRepo.findUserById(userId)
-  if (!user || !user.avatarUrl) return { success: true }
-
-  const urlParts = user.avatarUrl.split('/')
-  const fileName = `avatars/${urlParts[urlParts.length - 1]}`
-
-  await authRepo.deleteFileFromR2(fileName)
-  await authRepo.updateUserAvatarUrl(userId, null)
-
+export const logoutUser = async (userId: string) => {
+  await authRepo.deleteRefreshTokensByUserId(userId)
   return { success: true }
 }
