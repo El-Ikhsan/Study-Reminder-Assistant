@@ -1,7 +1,9 @@
 import { saveTelemetryAndRollingLimit } from '@/modules/sensor/sensor.repo'
+import { processSensorReportForAI, processTimePhaseReport } from '@/modules/pomodoro/pomodoro.service'
+import { updateSessionStatusForDO } from '@/modules/pomodoro/pomodoro.repo' // ✨ IMPORT INI DITAMBAHKAN
+import { logger } from '@/utils/logger'
 
-
-// Bikin tipe data untuk KTP - HANYA IOT
+// Tipe data untuk KTP - HANYA IOT
 type SessionAttachment = { role: 'iot', deviceId: string }
 
 export class DeviceRoom {
@@ -16,11 +18,7 @@ export class DeviceRoom {
   async fetch(request: Request) {
     const url = new URL(request.url)
     const deviceId = url.searchParams.get('deviceId')
-    
-    // Paksa role hanya jadi 'iot'
     const role: 'iot' = 'iot'
-
-    console.log(`[DO] Request masuk - Role: ${role}, DeviceId: ${deviceId}`)
 
     if (request.method === 'POST' && url.pathname.endsWith('/internal/command')) {
       if (!deviceId) return new Response('Missing deviceId', { status: 400 })
@@ -29,7 +27,6 @@ export class DeviceRoom {
       let isDelivered = false
 
       const sockets = this.state.getWebSockets()
-      
       for (const ws of sockets) {
         const data = ws.deserializeAttachment() as SessionAttachment | null
         if (data && data.role === 'iot' && data.deviceId === deviceId) {
@@ -47,12 +44,10 @@ export class DeviceRoom {
       })
     }
 
-    // ==========================================
-    // ✨ 2. PINTU MASUK WEBSOCKET
-    // ==========================================
+    //  PINTU MASUK WEBSOCKET
     if (request.headers.get('Upgrade') === 'websocket') {
       if (!deviceId) {
-        console.error("[DO] Koneksi ditolak: DeviceId kosong")
+        logger.warn("[DO] Koneksi ditolak: DeviceId kosong")
         return new Response('Missing deviceId', { status: 400 })
       }
       
@@ -63,13 +58,9 @@ export class DeviceRoom {
       try {
         server.serializeAttachment({ role, deviceId })
         this.state.acceptWebSocket(server)
-
-        return new Response(null, {
-          status: 101,
-          webSocket: client,
-        })
+        return new Response(null, { status: 101, webSocket: client })
       } catch (err) {
-        console.error("[DO] Gagal inisialisasi WebSocket:", err)
+        logger.error("[DO] Gagal inisialisasi WebSocket:", err)
         return new Response('Internal Error', { status: 500 })
       }
     }
@@ -80,39 +71,82 @@ export class DeviceRoom {
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
     try {
         const attachment = ws.deserializeAttachment() as SessionAttachment | null
-        if (!attachment) return
+        if (!attachment || typeof message !== 'string') return
 
-        if (typeof message === 'string' && message === 'ping') {
+        if (message === 'ping') {
             ws.send('pong')
             return
         }
 
-        if (typeof message === 'string' && attachment.role === 'iot') {
+        if (attachment.role === 'iot') {
             const data = JSON.parse(message)
-            if (data.type === 'TELEMETRY_UPDATE') {
+            
+            // ROUTER WEBSOCKET ESP32
+            switch (data.type) {
                 
-                // KUNCI JAWABAN: Lempar this.env ke dalam repo!
-                await saveTelemetryAndRollingLimit(this.env, {
-                    deviceId: attachment.deviceId,
-                    temperature: data.payload.temperature,
-                    lightLux: data.payload.lightLux,
-                    noiseLevel: data.payload.noiseLevel
-                })
-                
-                console.log(`[DO] Telemetri WS dari ${attachment.deviceId} berhasil disimpan ke D1`)
+                case 'TELEMETRY_UPDATE':
+                    await saveTelemetryAndRollingLimit(this.env, {
+                        deviceId: attachment.deviceId,
+                        temperature: data.payload.temperature,
+                        lightLux: data.payload.lightLux,
+                        noiseLevel: data.payload.noiseLevel
+                    })
+                    break
+
+                case 'SENSOR_REPORT_FOR_AI':
+                    logger.info(`[WS] Menerima request AI (Sensor) dari ${attachment.deviceId}`)
+                    const sensorRes = await processSensorReportForAI(attachment.deviceId, data.payload, this.env)
+                    
+                    if (sensorRes.aiHandled) {
+                        ws.send(JSON.stringify({
+                            type: 'AI_RESPONSE',
+                            payload: { emotion: sensorRes.emotion, text: sensorRes.text }
+                        }))
+                    }
+                    break
+
+                case 'PHASE_REPORT':
+                    logger.info(`[WS] Menerima request AI (Perubahan Fase Waktu) dari ${attachment.deviceId}`)
+                    const phaseRes = await processTimePhaseReport(
+                        data.payload.sessionId, attachment.deviceId, data.payload.currentCycle,
+                        data.payload.mode, data.payload.durationMin, data.payload.remainingMin, 
+                        data.payload.condition, this.env
+                    )
+                    
+                    ws.send(JSON.stringify({
+                        type: 'AI_RESPONSE',
+                        payload: { emotion: phaseRes.emotion, text: phaseRes.text }
+                    }))
+                    break
+
+                case 'SESSION_COMPLETED':
+                    logger.info(`[WS] Sesi Pomodoro ${data.payload.sessionId} selesai natural dari ${attachment.deviceId}`)
+                    await updateSessionStatusForDO(this.env, data.payload.sessionId, 'completed')
+                    ws.send(JSON.stringify({
+                        type: 'AI_RESPONSE',
+                        payload: { emotion: 'happy', text: 'Kerja bagus, Master. Kamu berhasil bertahan sampai akhir.' }
+                    }))
+                    break
+
+                case 'SESSION_STOPPED':
+                    logger.info(`[WS] Sesi Pomodoro ${data.payload.sessionId} dihentikan manual dari ${attachment.deviceId}`)
+                    await updateSessionStatusForDO(this.env, data.payload.sessionId, 'cancelled')
+                    break
+
+                default:
+                    logger.warn(`[DO] Tipe pesan tidak dikenal dari IoT: ${data.type}`)
             }
         }
     } catch (e: any) {
-        // Biar error database-nya ketahuan jelas di terminal Wrangler
-        console.error("[DO] Error DB/Parsing di webSocketMessage:", e.message || e)
+        logger.error("[DO] Error di webSocketMessage:", e.message || e)
     }
   }
 
   async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
-    console.log(`[DO] WebSocket ditutup: ${code} - ${reason}`)
+    logger.info(`[DO] WebSocket ditutup: ${code} - ${reason}`)
   }      
 
   async webSocketError(ws: WebSocket, error: any) {
-    console.error("WebSocket Error:", error)
+    logger.error("WebSocket Error:", error)
   }
 }

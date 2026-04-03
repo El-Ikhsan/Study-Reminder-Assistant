@@ -1,38 +1,42 @@
 import { Context } from 'hono'
-import * as pomodoroService from './pomodoro.service'
 import { ResponseError } from '@/utils/responseError'
+import { startSession, stopSession } from './pomodoro.service'
+import { logger } from '@/utils/logger'
 
 export const startPomodoro = async (c: Context) => {
-  const body = await c.req.json()
-  if (!body.deviceId || !body.focusDuration) throw new ResponseError(400, "Data tidak lengkap")
-  
-  const result = await pomodoroService.startSession(body.deviceId, body, c.env)
-  return c.json(result, 200)
+  try {
+    const body = await c.req.json()
+    const { deviceId, recipe } = body
+
+    if (!deviceId || !recipe) {
+      return c.json({ 
+        success: false, 
+        message: "Device ID dan Recipe wajib diisi" 
+      }, 400)
+    }
+
+    // Lempar ke Service (Di dalam startSession ini UUID akan di-generate)
+    const result = await startSession(deviceId, recipe, c.env)
+
+    return c.json({
+      success: true,
+      message: result.message,
+      sessionId: result.sessionId // Mengembalikan ID yang baru dibuat ke frontend
+    })
+
+  } catch (error: any) {
+    logger.error("Error di startPomodoro controller:", error)
+    return c.json({ 
+      success: false, 
+      message: error.message || "Terjadi kesalahan internal" 
+    }, 500)
+  }
 }
 
 export const stopPomodoro = async (c: Context) => {
   const body = await c.req.json()
   if (!body.sessionId || !body.deviceId) throw new ResponseError(400, "Session ID dan Device ID wajib diisi")
 
-  const result = await pomodoroService.stopSession(body.sessionId, body.deviceId, c.env)
-  return c.json(result, 200)
-}
-
-export const reportSensorToAI = async (c: Context) => {
-  const body = await c.req.json()
-  if (!body.deviceId || !body.sensor) throw new ResponseError(400, "Device ID dan data sensor wajib dikirim")
-
-  const result = await pomodoroService.processSensorReportForAI(body.deviceId, body.sensor, c.env)
-  return c.json(result, 200)
-}
-
-export const reportTimePhase = async (c: Context) => {
-  const body = await c.req.json()
-  // Validasi payload dari IoT
-  if (!body.sessionId || !body.deviceId || !body.mode) throw new ResponseError(400, "Payload fase waktu tidak lengkap")
-
-  const result = await pomodoroService.processTimePhaseReport(
-    body.sessionId, body.deviceId, body.mode, body.durationMin, body.remainingMin, body.condition, c.env
-  )
+  const result = await stopSession(body.sessionId, body.deviceId, c.env)
   return c.json(result, 200)
 }

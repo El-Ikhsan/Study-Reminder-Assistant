@@ -48,25 +48,26 @@ export const checkClaimStatus = async (rinchanId: string) => {
 export const claimNewDevice = async (userId: string, rinchanId: string, deviceName: string) => {
   
   // 1. Cek apakah UUID sudah diklaim orang lain
-  const existing = await deviceRepo.findDeviceByRinchanId(rinchanId)
-  if (existing) {
+  const deviceData = await deviceRepo.findDeviceByRinchanId(rinchanId)
+  if (!deviceData) {
+    throw new ResponseError(404, 'Perangkat dengan Rinchan ID ini tidak ditemukan.')
+  }
+  if (deviceData.userId && deviceData.userId !== userId) {
     throw new ResponseError(400, 'Perangkat ini sudah terdaftar di akun lain.')
   }
+  if (deviceData.status === 'claimed' && deviceData.userId === userId) {
+    throw new ResponseError(400, 'Perangkat ini sudah terdaftar di akun Anda.')
+  }
 
-  // 2. Daftarkan perangkat baru
-  const deviceId = crypto.randomUUID()
-  const newDevice = await deviceRepo.insertDevice({
-    id: deviceId,
-    rinchanId: rinchanId,
+  // 2. Update data device jika belum diklaim
+  await deviceRepo.updateDeviceData(deviceData.id, {
     userId: userId,
     deviceName: deviceName,
-    tokenVersion: 1, // Set versi awal token menjadi 1
     status: 'claimed',
+    tokenVersion: 1
   })
-
-  return {
-    device: newDevice,
-  }
+  const updatedDevice = await deviceRepo.findDeviceById(deviceData.id)
+  return { device: updatedDevice }
 }
 
 export const renewDeviceToken = async (userId: string, deviceId: string) => {

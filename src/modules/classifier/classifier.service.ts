@@ -2,6 +2,7 @@ export type SensorData = {
   temperature: number
   lightLux: number
   noiseLevel: number
+  sessionId: string
 }
 
 export type PomodoroContext = {
@@ -267,7 +268,7 @@ export const analyzeTimePhase = (
   rawMode: string, 
   durationMin: number, 
   remainingMin: number,
-  condition: TimeCondition = "normal"
+  condition: TimeCondition
 ) => {
   
   // Validasi tipe data (Fallback jika ngawur)
@@ -292,14 +293,14 @@ export const analyzeTimePhase = (
     .replace("{context}", contextString) 
 
   // Penentuan Hyperparameter AI
-  let temp = 0.70
-  let topK = 40
+  let temp = 0.48
+  let topK = 0
   
-  if (condition === "panjang") {
-    temp = 0.50; topK = 20; 
-  } else if (condition === "deadline") {
-    temp = 0.85; topK = 50; 
-  }
+  // if (condition === "panjang") {
+  //   temp = 0.50; topK = 20; 
+  // } else if (condition === "deadline") {
+  //   temp = 0.85; topK = 50; 
+  // }
 
   const descriptor = `${dictionaryKey}, ${contextString}`
 

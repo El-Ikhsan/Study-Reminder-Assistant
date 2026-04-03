@@ -7,7 +7,7 @@ export const users = sqliteTable("users", {
   name: text("name").notNull(),
   password: text("password").notNull(),
   avatarUrl: text("avatar_url"),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 })
 
 export const devices = sqliteTable("devices", {
@@ -18,7 +18,7 @@ export const devices = sqliteTable("devices", {
   tokenVersion: integer("token_version").default(1).notNull(),
   status: text("status", { enum: ["claimed", "unclaimed"] }).default("unclaimed"),
   lastSeen: integer("last_seen", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 })
 
 export const pomodoroSessions = sqliteTable("pomodoro_sessions", {
@@ -32,7 +32,7 @@ export const pomodoroSessions = sqliteTable("pomodoro_sessions", {
   currentMode: text("current_mode", { enum: ["fokus", "istirahat"] }).default("fokus"),
   currentPhase: text("current_phase", { enum: ["awal", "tengah", "akhir"] }).default("awal"),
   status: text("status", { enum: ["running", "paused", "completed", "cancelled"] }).default("running"),
-  startedAt: integer("started_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
+  startedAt: integer("started_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
   endedAt: integer("ended_at", { mode: "timestamp" }),
 })
 
@@ -42,31 +42,23 @@ export const sensorTelemetry = sqliteTable('sensor_telemetry', {
   temperature: real('temperature').notNull(),
   lightLux: real('light_lux').notNull(),
   noiseLevel: real('noise_level').notNull(),
-  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
+  createdAt: integer('created_at', { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull()
 })
 
 export const rinchanLogs = sqliteTable('rinchan_logs', {
   id: text('id').primaryKey(),
   deviceId: text('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
-  triggerContext: text('trigger_context').notNull(), // Contoh: "suhu ruangan panas", atau "fase tengah fokus"
-  aiResponse: text('ai_response').notNull(),         // Teks yang diucapkan AI
-  emotion: text('emotion').notNull(),                // Mimik wajah saat kejadian
-  // Snapshot sensor saat Rin-chan ngomel (Boleh null kalau trigger-nya dari Pomodoro Time)
+  sessionId: text('session_id').references(() => pomodoroSessions.id, { onDelete: 'cascade' }), 
+  currentCycle: integer('current_cycle'),                               // Tambahan baru
+  pomodoroMode: text('pomodoro_mode', { enum: ["fokus", "istirahat"] }), // Tambahan baru
+  timePhase: text('time_phase', { enum: ["awal", "tengah", "akhir"] }),  // Tambahan baru
+  triggerContext: text('trigger_context').notNull(), 
+  aiResponse: text('ai_response').notNull(),         
+  emotion: text('emotion').notNull(),                
   temperatureAtTime: real('temperature_at_time'),
   lightAtTime: real('light_at_time'),
   noiseAtTime: real('noise_at_time'),
-  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
-})
-
-export const interactions = sqliteTable("interactions", {
-  id: text("id").primaryKey(),
-  deviceId: text("device_id").references(() => devices.id).notNull(),
-  userInput: text("user_input").notNull(),
-  aiResponse: text("ai_response").notNull(),
-  emotion: text("emotion", {
-    enum: ["neutral", "happy", "thinking", "surprised", "sad"],
-  }).default("neutral"),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
+  createdAt: integer('created_at', { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull()
 })
 
 export const refreshTokens = sqliteTable("refresh_tokens", {
@@ -74,15 +66,5 @@ export const refreshTokens = sqliteTable("refresh_tokens", {
   userId: text("user_id").references(() => users.id).notNull(),
   token: text("token").notNull().unique(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
-})
-
-export const webhooks = sqliteTable("webhooks", {
-  id: text("id").primaryKey(),
-  deviceId: text("device_id").references(() => devices.id).notNull(),
-  url: text("url").notNull(),
-  secret: text("secret"),
-  events: text("events").notNull(),
-  isActive: integer("is_active", { mode: "boolean" }).default(true),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 })

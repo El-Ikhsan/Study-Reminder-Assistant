@@ -1,5 +1,5 @@
 import { getDb, getDbForDO } from '@/db/client'
-import { sensorTelemetry, rinchanLogs } from '@/db/schema'
+import { sensorTelemetry } from '@/db/schema'
 import { sql, eq, desc, count } from 'drizzle-orm'
 import { ResponseError } from '@/utils/responseError'
 import { logger } from '@/utils/logger'
@@ -22,16 +22,16 @@ export const saveTelemetryAndRollingLimit = async (env: any, data: {
       noiseLevel: data.noiseLevel
     })
 
-    // 2. Hitung jumlah data alat ini di database (1 Read)
+    // 2. Hitung jumlah data (1 Read)
     const result = await db.select({ total: count() })
       .from(sensorTelemetry)
       .where(eq(sensorTelemetry.deviceId, data.deviceId))
     
     const currentTotal = result[0].total
 
-    // 3. Logika Sapu Bersih: Jika sudah tembus 200 baris, sisakan 50 terbaru! (1 Write massal)
+    // 3. Logika Sapu Bersih (Jalan JIKA tembus 200 saja)
     if (currentTotal >= 200) {
-      console.log(`[SensorRepo] Data mencapai ${currentTotal}. Memulai penghapusan 150 data lama...`)
+      console.log(`[SensorRepo] Data mencapai ${currentTotal}. Memulai penghapusan menyisakan 50 terbaru...`)
       
       await db.run(sql`
         DELETE FROM sensor_telemetry 
@@ -43,7 +43,6 @@ export const saveTelemetryAndRollingLimit = async (env: any, data: {
           LIMIT 50
         )
       `)
-      console.log(`[SensorRepo] Pembersihan selesai. 50 data terbaru tersisa.`)
     }
     
   } catch (error) {
@@ -51,40 +50,8 @@ export const saveTelemetryAndRollingLimit = async (env: any, data: {
   }
 }
 
-export const saveRinchanLogAndRollingLimit = async (data: {
-  deviceId: string
-  triggerContext: string
-  aiResponse: string
-  emotion: string
-  temperatureAtTime: number
-  lightAtTime: number
-  noiseAtTime: number
-}) => {
-  try {
-    const db = getDb()
-    
-    await db.insert(rinchanLogs).values({
-      id: crypto.randomUUID(),
-      ...data
-    })
 
-    await db.run(sql`
-      DELETE FROM rinchan_logs 
-      WHERE device_id = ${data.deviceId} 
-      AND id NOT IN (
-        SELECT id FROM rinchan_logs 
-        WHERE device_id = ${data.deviceId} 
-        ORDER BY created_at DESC 
-        LIMIT 50
-      )
-    `)
-  } catch (error) {
-    logger.error('Failed to save Rin-chan log', error)
-    throw new ResponseError(500, 'Gagal menyimpan riwayat respons Rin-chan.')
-  }
-}
 
-// Untuk Endpoint HTTP GET di Frontend
 export const getTelemetryHistory = async (deviceId: string) => {
   try {
     const db = getDb()
