@@ -141,74 +141,61 @@ const getSensorTemplateKey = (contextStr: string): string => {
 export const analyzeEnvironment = (sensor: SensorData) => {
   const { temperature, lightLux, noiseLevel } = sensor
 
-  // A. SCORING (Menyimpan nilai input JSONL secara harfiah di properti 'key')
-  let tempResult: SensorResult = { point: 3, key: "" }
+  // A. SCORING (Sama persis dengan sebelumnya)
+  let tempResult = { point: 3, key: "" }
   if (temperature >= 30) tempResult = { point: 1, key: "suhu ruangan panas" }
   else if (temperature >= 24 && temperature < 30) tempResult = { point: 2, key: "suhu ruangan hangat" }
-  else if (temperature >= 18 && temperature < 24) tempResult = { point: 3, key: "" } 
   else if (temperature >= 10 && temperature < 18) tempResult = { point: 2, key: "suhu ruangan dingin" }
   else if (temperature < 10) tempResult = { point: 1, key: "suhu ruangan sangat dingin" }
 
-  let noiseResult: SensorResult = { point: 3, key: "" }
+  let noiseResult = { point: 3, key: "" }
   if (noiseLevel >= 70) noiseResult = { point: 1, key: "suasana bising" }
   else if (noiseLevel >= 55 && noiseLevel < 70) noiseResult = { point: 2, key: "suasana ramai" }
-  else if (noiseLevel < 55) noiseResult = { point: 3, key: "" } 
 
-  let lightResult: SensorResult = { point: 3, key: "" }
+  let lightResult = { point: 3, key: "" }
   if (lightLux >= 700) lightResult = { point: 1, key: "pencahayaan silau" }
-  else if (lightLux >= 300 && lightLux < 700) lightResult = { point: 3, key: "" } 
   else if (lightLux >= 100 && lightLux < 300) lightResult = { point: 2, key: "pencahayaan cukup terang" }
-  // Menambahkan pencahayaan redup
   else if (lightLux >= 50 && lightLux < 100) lightResult = { point: 1, key: "pencahayaan redup" }
   else if (lightLux < 50) lightResult = { point: 1, key: "pencahayaan gelap" }
 
   const results = [tempResult, noiseResult, lightResult]
   const allPoint3 = results.every(r => r.point === 3)
-  const allPoint1 = results.every(r => r.point === 1)
 
-  let keysToSend: string[] = []
+  // ✨ KONDISI 1: Kalau semua optimal, langsung kembalikan null
+  if (allPoint3) return null
 
-  // B. CEK KONDISI EKSTRIM / PRIORITAS
-  if (allPoint3) {
-    keysToSend = ["kondisi lingkungan sangat optimal"]
-  } else if (allPoint1) {
-    keysToSend = ["kondisi lingkungan tidak kondusif"]
+  // ✨ KONDISI 2: SISTEM PRIORITAS (Pilih 1 masalah saja!)
+  let selectedKey = ""
+
+  // Cari yang paling parah (Point 1) dulu
+  const point1Results = results.filter(r => r.point === 1)
+  if (point1Results.length > 0) {
+    // Kalau ada beberapa point 1 (misal: bising & panas), kita ambil salah satu saja (yang pertama ketemu)
+    selectedKey = point1Results[0].key 
   } else {
-    const point1Results = results.filter(r => r.point === 1)
+    // Kalau tidak ada point 1, cari yang point 2
     const point2Results = results.filter(r => r.point === 2)
-    
-    if (point1Results.length > 0) {
-      keysToSend = point1Results.map(r => r.key)
-    } else if (point2Results.length > 0) {
-      keysToSend = point2Results.map(r => r.key)
+    if (point2Results.length > 0) {
+      selectedKey = point2Results[0].key
     }
   }
 
-  // C. BENTUK PAYLOAD UNTUK AI
-  return keysToSend.map(contextStr => {
-    // Cari key untuk dictionary (misal "sensor_panas")
-    const templateKey = getSensorTemplateKey(contextStr)
-    
-    // Ambil template acak
-    const templates = SENSOR_INSTRUCTIONS[templateKey] || SENSOR_INSTRUCTIONS["sensor_buruk"]
-    const randomTemplate = templates[Math.floor(Math.random() * templates.length)]
+  // ✨ KONDISI 3: BENTUK PAYLOAD UNTUK AI (Hanya 1 output, murni sesuai Dataset!)
+  const templateKey = getSensorTemplateKey(selectedKey)
+  const templates = SENSOR_INSTRUCTIONS[templateKey] || SENSOR_INSTRUCTIONS["sensor_buruk"]
+  const randomTemplate = templates[Math.floor(Math.random() * templates.length)]
 
-    // Inject nilai (Gunakan Regex /g agar semua {tag} terganti jika ada lebih dari 1)
-    const CORE_ID = "Kamu adalah Rinchan, teman belajar yang tenang dan pendiam (kuudere)."
-    const finalInstruction = randomTemplate
-      .replace(/{CORE_ID}/g, CORE_ID)
-      .replace(/{context}/g, contextStr)
+  const CORE_ID = "Kamu adalah Rinchan, teman belajar yang tenang dan pendiam (kuudere)."
+  const finalInstruction = randomTemplate
+    .replace(/{CORE_ID}/g, CORE_ID)
+    .replace(/{context}/g, selectedKey)
 
-    return {
-      input: contextStr, // ✨ PENTING: Ini sama persis dengan input di dataset (misal: "suhu ruangan dingin")
-      instruction: finalInstruction,
-      inferenceParams: {
-        temperature: 0.64,
-        topK: 22
-      },
-      emotion: getMimikSensor(templateKey)
-    }
-  })
+  return {
+    input: selectedKey, // ✨ Dijamin 100% sama dengan string di Colab/Dataset
+    instruction: finalInstruction,
+    inferenceParams: { temperature: 0.64, topK: 22 },
+    emotion: getMimikSensor(templateKey)
+  }
 }
 
 // ==========================================
