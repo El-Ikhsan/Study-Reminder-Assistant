@@ -53,7 +53,7 @@ export const claimNewDevice = async (userId: string, rinchanId: string, deviceNa
   // 1. Cek apakah UUID sudah diklaim orang lain
   const deviceData = await deviceRepo.findDeviceByRinchanId(rinchanId)
   if (!deviceData) {
-    throw new ResponseError(404, 'Perangkat dengan Rinchan ID ini tidak ditemukan.')
+    throw new ResponseError(404, 'Perangkat dengan Rinchan ID ini tidak ditemukan. Pastikan perangkat sudah menyala, lakukan restart/booting ulang, lalu coba klaim kembali.')
   }
   if (deviceData.userId && deviceData.userId !== userId) {
     throw new ResponseError(400, 'Perangkat ini sudah terdaftar di akun lain.')
@@ -88,4 +88,16 @@ export const renewDeviceToken = async (userId: string, deviceId: string) => {
 
 export const getUserDevices = async (userId: string) => {
   return await deviceRepo.findDevicesByUserId(userId)
+}
+
+export const deleteDevice = async (userId: string, deviceId: string) => {
+  const device = await deviceRepo.findDeviceById(deviceId)
+
+  if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
+  if (device.userId !== userId) throw new ResponseError(403, 'Akses ditolak.')
+
+  await deviceRepo.deletePomodoroSessionsByDeviceId(deviceId)
+  await deviceRepo.deleteDeviceById(deviceId)
+
+  return { success: true, message: 'Perangkat berhasil dihapus.' }
 }

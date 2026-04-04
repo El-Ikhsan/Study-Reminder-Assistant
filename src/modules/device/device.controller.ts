@@ -1,11 +1,10 @@
 import { Context } from 'hono'
-import { validateBody } from '@/utils/validation'
+import { validateBody, validateParam } from '@/utils/validation'
 import * as deviceService from './device.service'
-import { claimDeviceSchema, claimStatusCheckSchema } from './device.validation'
+import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema } from './device.validation'
 
 export const checkClaimStatus = async (c: Context) => {
- const rinchanId = c.req.param('rinchan-id') 
- const rinchanIdData = claimStatusCheckSchema.parse({ rinchanId: rinchanId })
+ const rinchanIdData = validateParam(c, claimStatusCheckSchema)
 
  const result = await deviceService.checkClaimStatus(rinchanIdData.rinchanId)
  return c.json({
@@ -36,4 +35,12 @@ export const getMyDevices = async (c: Context) => {
   const user = c.get('user')
   const result = await deviceService.getUserDevices(user.userId)
   return c.json({ success: true, data: result })
+}
+
+export const deleteDevice = async (c: Context) => {
+  const user = c.get('user')
+  const params = validateParam(c, deviceIdParamSchema)
+
+  const result = await deviceService.deleteDevice(user.userId, params.deviceId)
+  return c.json(result, 200)
 }
