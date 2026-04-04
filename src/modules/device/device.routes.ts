@@ -11,6 +11,6 @@ device.post('/claim', authMiddleware, deviceController.claimDevice)
 device.get('/list', authMiddleware, deviceController.getMyDevices)
 device.delete('/:deviceId', authMiddleware, deviceController.deleteDevice)
 // path for device iot
-device.get('/poll/:rinchan-id', deviceController.checkClaimStatus)
+device.get('/poll/:rinchanId', deviceController.checkClaimStatus)
 
 export default device
