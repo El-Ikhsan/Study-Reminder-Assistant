@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { validateBody } from '@/utils/validation'
 import * as deviceService from './device.service'
-import { claimDeviceSchema, telemetrySchema, claimStatusCheckSchema } from './device.validation'
+import { claimDeviceSchema, claimStatusCheckSchema } from './device.validation'
 
 export const checkClaimStatus = async (c: Context) => {
  const rinchanId = c.req.param('rinchan-id') 
@@ -36,10 +36,4 @@ export const getMyDevices = async (c: Context) => {
   const user = c.get('user')
   const result = await deviceService.getUserDevices(user.userId)
   return c.json({ success: true, data: result })
-}
-
-export const sendTelemetry = async (c: Context) => {
-  const data = await validateBody(c, telemetrySchema)
-  await deviceService.recordSensor(data)
-  return c.json({ success: true, message: 'Telemetry berhasil direkam' })
 }

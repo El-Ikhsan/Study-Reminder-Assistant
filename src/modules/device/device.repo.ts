@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { devices, sensorTelemetry } from '@/db/schema'
+import { devices } from '@/db/schema'
 import { getDb } from '@/db/client'
 
 export const findDeviceByRinchanId = async (rinchanId: string) => {
@@ -25,12 +25,12 @@ export const findDevicesByUserId = async (userId: string) => {
   return await db.select().from(devices).where(eq(devices.userId, userId))
 }
 
-export const insertTelemetry = async (data: typeof sensorTelemetry.$inferInsert) => {
-  const db = getDb()
-  return await db.insert(sensorTelemetry).values(data)
-}
-
 export const updateDeviceData = async (id: string, data: Partial<typeof devices.$inferInsert>) => {
   const db = getDb()
   await db.update(devices).set(data).where(eq(devices.id, id))
+}
+
+export const updateDeviceLastSeen = async (id: string) => {
+  const db = getDb()
+  await db.update(devices).set({ lastSeen: new Date() }).where(eq(devices.id, id))
 }

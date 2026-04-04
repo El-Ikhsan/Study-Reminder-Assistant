@@ -11,6 +11,5 @@ device.post('/claim', authMiddleware, deviceController.claimDevice)
 device.get('/list', authMiddleware, deviceController.getMyDevices)
 // path for device iot
 device.get('/poll/:rinchan-id', deviceController.checkClaimStatus)
-device.post('/telemetry', deviceAuthMiddleware, deviceController.sendTelemetry)
 
 export default device

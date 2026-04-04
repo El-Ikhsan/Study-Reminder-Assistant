@@ -16,6 +16,9 @@ export const checkClaimStatus = async (rinchanId: string) => {
     })
   }
 
+  // Update lastSeen setiap kali device polling
+  await deviceRepo.updateDeviceLastSeen(device.id)
+
   if (!device.userId) {
 
     return {
@@ -81,19 +84,6 @@ export const renewDeviceToken = async (userId: string, deviceId: string) => {
   await deviceRepo.updateDeviceData(deviceId, { tokenVersion: newVersion })
 
   return { version: newVersion }
-}
-
-export const recordSensor = async (data: any) => {
-  const device = await deviceRepo.findDeviceById(data.deviceId)
-  if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
-
-  return await deviceRepo.insertTelemetry({
-    id: crypto.randomUUID(),
-    deviceId: data.deviceId,
-    temperature: data.temperature,
-    lightLux: data.lightLux,
-    noiseLevel: data.noiseLevel,
-  })
 }
 
 export const getUserDevices = async (userId: string) => {
