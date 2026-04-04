@@ -19,3 +19,16 @@ export const validateBody = async <T>(
     throw new ResponseError(400, 'Invalid JSON payload')
   }
 }
+
+export const validateParam = <T>(c: Context, schema: ZodSchema<T>): T => {
+  try {
+    // c.req.param() mengambil semua parameter URL sebagai object
+    return schema.parse(c.req.param())
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const errorMessages = err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+      throw new ResponseError(400, `Param validation error: ${errorMessages}`)
+    }
+    throw new ResponseError(400, 'Invalid URL parameter')
+  }
+}

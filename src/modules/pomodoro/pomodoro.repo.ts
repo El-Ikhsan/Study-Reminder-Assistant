@@ -1,5 +1,5 @@
 import { getDb } from '@/db/client'
-import { pomodoroSessions } from '@/db/schema'
+import { pomodoroSessions, rinchanLogs } from '@/db/schema'
 import { eq, sql, count } from 'drizzle-orm'
 import { ResponseError } from '@/utils/responseError'
 import { logger } from '@/utils/logger'
@@ -51,4 +51,24 @@ export const updateSessionStatus = async (sessionId: string, newStatus: 'running
     logger.error(`Gagal mengubah status sesi ${sessionId}`, error)
     throw new ResponseError(500, 'Gagal mengubah status sesi Pomodoro.')
   }
+}
+
+export const findPomodoroHistoryBySessionId = async (sessionId: string) => {
+  const db = getDb()
+  return await db.select().from(rinchanLogs).where(eq(rinchanLogs.sessionId, sessionId))
+}
+
+export const findAllPomodoroSessions = async () => {
+  const db = getDb()
+  return await db.select().from(pomodoroSessions)
+}
+export const findPomodoroSessionById = async (sessionId: string) => {
+  const db = getDb()
+  const result = await db.select().from(pomodoroSessions).where(eq(pomodoroSessions.id, sessionId)).limit(1)
+  return result[0] || null
+}
+
+export const deleteSessionById = async (sessionId: string) => {
+  const db = getDb()
+  await db.delete(pomodoroSessions).where(eq(pomodoroSessions.id, sessionId))
 }

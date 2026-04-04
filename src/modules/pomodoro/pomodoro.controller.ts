@@ -1,19 +1,14 @@
 import { Context } from 'hono'
 import { ResponseError } from '@/utils/responseError'
-import { startSession, stopSession } from './pomodoro.service'
+import { startSession, stopSession, getPomodoroHistoryById, deletePomodoroById, getAllPomodoroSessions } from './pomodoro.service'
 import { logger } from '@/utils/logger'
+import { validateBody, validateParam } from '@/utils/validation'
+import { startPomodoroSchema, pomodoroIdParamSchema } from './pomodoro.validation'
 
 export const startPomodoro = async (c: Context) => {
   try {
-    const body = await c.req.json()
+    const body = await validateBody(c, startPomodoroSchema)
     const { deviceId, recipe } = body
-
-    if (!deviceId || !recipe) {
-      return c.json({ 
-        success: false, 
-        message: "Device ID dan Recipe wajib diisi" 
-      }, 400)
-    }
 
     // Lempar ke Service (Di dalam startSession ini UUID akan di-generate)
     const result = await startSession(deviceId, recipe, c.env)
@@ -39,4 +34,30 @@ export const stopPomodoro = async (c: Context) => {
 
   const result = await stopSession(body.sessionId, body.deviceId, c.env)
   return c.json(result, 200)
+}
+
+export const getPomodoroHistory = async (c: Context) => {
+  const params = validateParam(c, pomodoroIdParamSchema)
+  const result = await getPomodoroHistoryById(params.pomodoroId)
+
+  return c.json({
+    success: true,
+    data: result,
+  }, 200)
+}
+
+export const deletePomodoroHistory = async (c: Context) => {
+  const params = validateParam(c, pomodoroIdParamSchema)
+  const result = await deletePomodoroById(params.pomodoroId)
+
+  return c.json(result, 200)
+}
+
+export const getAllPomodoro = async (c: Context) => {
+  const result = await getAllPomodoroSessions()
+
+  return c.json({
+    success: true,
+    data: result,
+  }, 200)
 }

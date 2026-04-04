@@ -2,6 +2,7 @@ import { logger } from '@/utils/logger'
 import type { Bindings } from '@/config/env'
 import * as pomodoroRepo from './pomodoro.repo' 
 import { sendToIoT } from '@/modules/websocket/ws.service'
+import { ResponseError } from '@/utils/responseError'
 
 export const startSession = async (deviceId: string, recipe: any, env: Bindings) => {
   const sessionId = crypto.randomUUID()
@@ -36,5 +37,22 @@ export const stopSession = async (sessionId: string, deviceId: string, env: Bind
   }
 
   return { success: true, message: 'Sesi Pomodoro berhasil dihentikan.' }
+}
+
+export const getPomodoroHistoryById = async (pomodoroId: string) => {
+  return await pomodoroRepo.findPomodoroHistoryBySessionId(pomodoroId)
+}
+
+export const getAllPomodoroSessions = async () => {
+  return await pomodoroRepo.findAllPomodoroSessions()
+}
+
+export const deletePomodoroById = async (pomodoroId: string) => {
+  const session = await pomodoroRepo.findPomodoroSessionById(pomodoroId)
+  if (!session) {
+    throw new ResponseError(404, 'Sesi Pomodoro tidak ditemukan.')
+  }
+  await pomodoroRepo.deleteSessionById(pomodoroId)
+  return { success: true, message: 'Sesi Pomodoro dan history berhasil dihapus.' }
 }
 
