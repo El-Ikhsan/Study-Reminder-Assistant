@@ -1,0 +1,1 @@
+ALTER TABLE `pomodoro_sessions` ADD `sensor_interval_sec` integer DEFAULT 60;

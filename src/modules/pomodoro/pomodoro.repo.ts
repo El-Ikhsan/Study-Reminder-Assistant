@@ -6,10 +6,11 @@ import { logger } from '@/utils/logger'
 
 export const createSession = async (data: {
   id: string; deviceId: string; focusDuration: number; restDuration: number
-  targetCycles: number; condition: 'normal' | 'marathon' | 'deadline'
+  targetCycles: number; condition: 'normal' | 'panjang' | 'deadline'
   currentCycle: number; currentMode: 'fokus' | 'istirahat'
   currentPhase: 'awal' | 'tengah' | 'akhir'
   status: 'running' | 'paused' | 'completed' | 'cancelled'
+  sensorIntervalSec: number
 }) => {
   try {
     const db = getDb()
