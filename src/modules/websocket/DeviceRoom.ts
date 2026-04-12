@@ -4,9 +4,11 @@ import * as wsRepo from './ws.repo'
 
 type SessionAttachment = { role: 'iot', deviceId: string }
 
+
 export class DeviceRoom {
   state: DurableObjectState
   env: any
+  audioStreams: Map<string, Uint8Array[]> = new Map()
 
   constructor(state: DurableObjectState, env: any) { this.state = state; this.env = env }
 
@@ -40,7 +42,18 @@ export class DeviceRoom {
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
     try {
         const attachment = ws.deserializeAttachment() as SessionAttachment | null
-        if (!attachment || typeof message !== 'string') return
+        if (!attachment) return
+
+        // ==========================================
+        // 🎤 PENERIMA DATA MENTAH (BINARY AUDIO CHUNKS)
+        // ==========================================
+        if (typeof message !== 'string') {
+            const chunks = this.audioStreams.get(attachment.deviceId)
+            if (chunks) {
+                chunks.push(new Uint8Array(message))
+            }
+            return // Keluar, jangan teruskan ke parsing JSON!
+        }
         if (message === 'ping') { ws.send('pong'); return }
 
         if (attachment.role === 'iot') {
@@ -64,11 +77,40 @@ export class DeviceRoom {
                 case 'SESSION_STOPPED':
                     await wsRepo.updateSessionStatusForDO(this.env, data.payload.sessionId, 'cancelled')
                     break
+                case 'AUDIO_STREAM_START':
+                    logger.info(`[🎤] Membuka buffer audio untuk device: ${attachment.deviceId}`);
+                    this.audioStreams.set(attachment.deviceId, []);
+                    break;
+                case 'AUDIO_STREAM_END':
+                    logger.info(`[🎤] Menutup buffer audio dan memulai transkripsi & pemikiran AI...`);
+                    const chunks = this.audioStreams.get(attachment.deviceId);
+                    
+                    if (chunks && chunks.length > 0) {
+                        
+                        // ✨ Panggil fungsi raksasa yang baru kita buat
+                        const chatResult = await wsService.processVoiceChat(chunks, this.env);
+
+                        // Kirim jawaban AI langsung ke ESP32
+                        ws.send(JSON.stringify({ 
+                            type: 'AI_RESPONSE', 
+                            payload: { 
+                                emotion: chatResult.emotion, 
+                                text: chatResult.text 
+                            } 
+                        }));
+                    }
+                    
+                    this.audioStreams.delete(attachment.deviceId);
+                    break;
             }
         }
     } catch (e: any) { logger.error("[DO] Error:", e.message || e) }
   }
 
-  async webSocketClose(ws: WebSocket, code: number, reason: string) {}      
+  async webSocketClose(ws: WebSocket, code: number, reason: string) {
+      // Bersihkan memori jika device tiba-tiba disconnect saat merekam
+      const attachment = ws.deserializeAttachment() as SessionAttachment | null
+      if (attachment) this.audioStreams.delete(attachment.deviceId);
+  }     
   async webSocketError(ws: WebSocket, error: any) {}
 }

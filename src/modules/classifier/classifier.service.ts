@@ -24,25 +24,25 @@ export type InferencePayload = {
 }
 
 const SENSOR_EMOTIONS: Record<string, string[]> = {
-  "sensor_panas": ["sweat"],                 // Nanti bisa ditambah: ["sweat", "annoyed"]
-  "sensor_dingin": ["cold"],                 // Nanti bisa ditambah: ["cold", "neutral"]
-  "sensor_bising": ["annoyed"],              // Nanti bisa ditambah: ["annoyed", "shocked"]
-  "sensor_ramai": ["annoyed", "neutral"], 
-  "sensor_gelap": ["sleepy"],
-  "sensor_redup": ["sleepy", "neutral"],
-  "sensor_silau": ["annoyed", "shocked"],
-  "sensor_optimal": ["neutral", "relax"],
-  "sensor_buruk": ["shocked", "annoyed"]
+  "sensor_panas": ["HOT"],                 // Nanti bisa ditambah: ["sweat", "annoyed"]
+  "sensor_dingin": ["COLD"],                 // Nanti bisa ditambah: ["cold", "neutral"]
+  "sensor_bising": ["NOISY"],              // Nanti bisa ditambah: ["annoyed", "shocked"]
+  "sensor_ramai": ["NOISY"], 
+  "sensor_gelap": ["DARK"],
+  "sensor_redup": ["SLEEPY"],
+  "sensor_silau": ["GLARE"],
+  "sensor_optimal": ["IDLE"],
+  "sensor_buruk": ["UNCOMFOTABLE"]
 }
 
 // 2. Kamus Mimik untuk Waktu Pomodoro
 const TIME_EMOTIONS: Record<string, string[]> = {
-  "istirahat_normal": ["relax", "neutral"],
-  "istirahat_panjang": ["relax", "sleepy"],
-  "istirahat_deadline": ["relax", "shocked"], // Istirahat tapi panik karena deadline
-  "fokus_normal": ["focused", "neutral"],
-  "fokus_panjang": ["focused"],
-  "fokus_deadline": ["shocked", "focused"]    // Kaget atau sangat serius
+  "istirahat_normal": ["DARK"],
+  "istirahat_panjang": ["SLEEPY"],
+  "istirahat_deadline": ["SLEEPY"], // Istirahat tapi panik karena deadline
+  "fokus_normal": ["IDLE"],
+  "fokus_panjang": ["IDLE"],
+  "fokus_deadline": ["SURPRISED"]    // Kaget atau sangat serius
 }
 
 const getMimikSensor = (templateKey: string): string => {
