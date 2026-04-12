@@ -4,9 +4,9 @@ import * as deviceService from './device.service'
 import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema } from './device.validation'
 
 export const checkClaimStatus = async (c: Context) => {
- const rinchanIdData = validateParam(c, claimStatusCheckSchema)
+ const deviceIotIdData = validateParam(c, claimStatusCheckSchema)
 
- const result = await deviceService.checkClaimStatus(rinchanIdData.rinchanId)
+ const result = await deviceService.checkClaimStatus(deviceIotIdData.deviceIotId)
  return c.json({
     success: true,
     status: result.status,
@@ -20,7 +20,7 @@ export const claimDevice = async (c: Context) => {
   const user = c.get('user')
   const data = await validateBody(c, claimDeviceSchema)
   
-  const result = await deviceService.claimNewDevice(user.userId, data.rinchanId, data.deviceName)
+  const result = await deviceService.claimNewDevice(user.userId, data.deviceIotId, data.deviceName)
   return c.json({ success: true, message: 'Perangkat berhasil diklaim', data: result }, 201)
 }
 export const renewToken = async (c: Context) => {

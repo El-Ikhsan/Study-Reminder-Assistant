@@ -3,10 +3,16 @@ import type { Bindings } from '@/config/env'
 import * as pomodoroRepo from './pomodoro.repo' 
 import { sendToIoT } from '@/modules/websocket/ws.service'
 import { ResponseError } from '@/utils/responseError'
+import { findDeviceById } from '@/modules/device/device.repo'
 
 export const startSession = async (deviceId: string, recipe: any, env: Bindings) => {
   const sessionId = crypto.randomUUID()
 
+  // Cek deviceId valid
+  const device = await findDeviceById(deviceId)
+  if (!device) {
+    throw new ResponseError(404, 'Perangkat tidak ditemukan. Pastikan deviceId valid dan sudah diklaim.')
+  }
   try {
     await sendToIoT(deviceId, "CMD_START_POMODORO", { sessionId, ...recipe }, env)
   } catch (error: any) {

@@ -21,7 +21,7 @@
 		{
 			"binding": "DB",
 			"database_name": "rinchan-db",
-			"database_id": "3298e47f-f096-4c45-945b-4e6e0bb46358",
+			"database_id": "bc19571a-9d50-4b2e-a8b6-d525ff411822",
 			"migrations_dir": "./drizzle"
 		}
 	],

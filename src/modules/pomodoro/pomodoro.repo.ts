@@ -1,5 +1,5 @@
 import { getDb } from '@/db/client'
-import { pomodoroSessions, rinchanLogs } from '@/db/schema'
+import { pomodoroSessions, pomodoroLogs } from '@/db/schema'
 import { eq, sql, count } from 'drizzle-orm'
 import { ResponseError } from '@/utils/responseError'
 import { logger } from '@/utils/logger'
@@ -56,7 +56,7 @@ export const updateSessionStatus = async (sessionId: string, newStatus: 'running
 
 export const findPomodoroHistoryBySessionId = async (sessionId: string) => {
   const db = getDb()
-  return await db.select().from(rinchanLogs).where(eq(rinchanLogs.sessionId, sessionId))
+  return await db.select().from(pomodoroLogs).where(eq(pomodoroLogs.sessionId, sessionId))
 }
 
 export const findAllPomodoroSessions = async () => {

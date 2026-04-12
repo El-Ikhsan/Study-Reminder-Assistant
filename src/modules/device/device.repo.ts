@@ -2,13 +2,13 @@ import { eq } from 'drizzle-orm'
 import { devices, pomodoroSessions } from '@/db/schema'
 import { getDb } from '@/db/client'
 
-export const findDeviceByRinchanId = async (rinchanId: string) => {
+export const findDeviceByDeviceIotId = async (deviceIotId: string) => {
   const db = getDb()
-  const result = await db.select().from(devices).where(eq(devices.rinchanId, rinchanId)).limit(1)
+  const result = await db.select().from(devices).where(eq(devices.deviceIotId, deviceIotId)).limit(1)
   return result[0] || null
 }
 
-export const insertRinchanId = async (data: { id: string, rinchanId: string, status: 'unclaimed' }) => {
+export const insertDeviceIotId = async (data: { id: string, deviceIotId: string, status: 'unclaimed' }) => {
   const db = getDb()
   const result = await db.insert(devices).values(data).returning()
   return result[0]

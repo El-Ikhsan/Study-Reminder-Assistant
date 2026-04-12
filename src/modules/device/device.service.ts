@@ -3,15 +3,15 @@ import { ResponseError } from '@/utils/responseError'
 import { generateIotToken } from '@/utils/jwt'
 import { getConfig } from '@/config/env'
 
-export const checkClaimStatus = async (rinchanId: string) => {
+export const checkClaimStatus = async (deviceIotId: string) => {
   const config = getConfig()
 
-  let device = await deviceRepo.findDeviceByRinchanId(rinchanId)
+  let device = await deviceRepo.findDeviceByDeviceIotId(deviceIotId)
   
   if (!device) {
-    device = await deviceRepo.insertRinchanId({
+    device = await deviceRepo.insertDeviceIotId({
       id: crypto.randomUUID(),
-      rinchanId: rinchanId,
+      deviceIotId: deviceIotId,
       status: 'unclaimed',
     })
   }
@@ -24,7 +24,7 @@ export const checkClaimStatus = async (rinchanId: string) => {
     return {
       status: 'waiting', 
       device: {
-        rinchanId: device.rinchanId,
+        deviceIotId: device.deviceIotId,
         deviceName: device.deviceName,
         deviceStatus: device.status,
       },
@@ -40,7 +40,7 @@ export const checkClaimStatus = async (rinchanId: string) => {
   return {
     status: 'claimed', 
     device: {
-      rinchanId: device.rinchanId,
+      deviceIotId: device.deviceIotId,
       deviceName: device.deviceName,
       deviceStatus: device.status,
     },
@@ -48,12 +48,12 @@ export const checkClaimStatus = async (rinchanId: string) => {
   }
 }
 
-export const claimNewDevice = async (userId: string, rinchanId: string, deviceName: string) => {
+export const claimNewDevice = async (userId: string, deviceIotId: string, deviceName: string) => {
   
   // 1. Cek apakah UUID sudah diklaim orang lain
-  const deviceData = await deviceRepo.findDeviceByRinchanId(rinchanId)
+  const deviceData = await deviceRepo.findDeviceByDeviceIotId(deviceIotId)
   if (!deviceData) {
-    throw new ResponseError(404, 'Perangkat dengan Rinchan ID ini tidak ditemukan. Pastikan perangkat sudah menyala, lakukan restart/booting ulang, lalu coba klaim kembali.')
+    throw new ResponseError(404, 'Perangkat dengan Device IoT ID ini tidak ditemukan. Pastikan perangkat sudah menyala, lakukan restart/booting ulang, lalu coba klaim kembali.')
   }
   if (deviceData.userId && deviceData.userId !== userId) {
     throw new ResponseError(400, 'Perangkat ini sudah terdaftar di akun lain.')

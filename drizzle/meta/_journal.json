@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1775198339945,
-      "tag": "0000_flawless_roland_deschain",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1776000186245,
-      "tag": "0001_chief_radioactive_man",
+      "when": 1776014871007,
+      "tag": "0000_third_chameleon",
       "breakpoints": true
     }
   ]

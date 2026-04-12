@@ -1,5 +1,5 @@
 import { getDbForDO } from '@/db/client'
-import { sensorTelemetry, rinchanLogs, pomodoroSessions } from '@/db/schema'
+import { sensorTelemetry, pomodoroLogs, pomodoroSessions } from '@/db/schema'
 import { eq, desc, count, lte, and, sql } from 'drizzle-orm'
 import { logger } from '@/utils/logger'
 
@@ -77,7 +77,7 @@ export const saveRinchanLogForDO = async (env: any, data: {
 }) => {
   try {
     const db = getDbForDO(env) 
-    await db.insert(rinchanLogs).values({ id: crypto.randomUUID(), ...data })
+    await db.insert(pomodoroLogs).values({ id: crypto.randomUUID(), ...data })
   } catch (error) {
     logger.error(`Gagal menyimpan riwayat AI log untuk ${data.deviceId}`, error)
   }
