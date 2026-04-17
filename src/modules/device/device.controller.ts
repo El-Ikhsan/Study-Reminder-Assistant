@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { validateBody, validateParam } from '@/utils/validation'
 import * as deviceService from './device.service'
-import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema } from './device.validation'
+import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema, setBrightnessSchema, setVolumeSchema } from './device.validation'
 
 export const checkClaimStatus = async (c: Context) => {
  const deviceIotIdData = validateParam(c, claimStatusCheckSchema)
@@ -42,5 +42,25 @@ export const deleteDevice = async (c: Context) => {
   const params = validateParam(c, deviceIdParamSchema)
 
   const result = await deviceService.deleteDevice(user.userId, params.deviceId)
+  return c.json(result, 200)
+}
+
+// ====================================================
+// 📡 PENGATURAN HARDWARE: BRIGHTNESS & VOLUME
+// ====================================================
+
+export const setBrightness = async (c: Context) => {
+  const user = c.get('user')
+  const body = await validateBody(c, setBrightnessSchema)
+
+  const result = await deviceService.setBrightness(user.userId, body.deviceId, body.value, c.env)
+  return c.json(result, 200)
+}
+
+export const setVolume = async (c: Context) => {
+  const user = c.get('user')
+  const body = await validateBody(c, setVolumeSchema)
+
+  const result = await deviceService.setVolume(user.userId, body.deviceId, body.value, c.env)
   return c.json(result, 200)
 }

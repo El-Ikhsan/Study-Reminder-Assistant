@@ -10,6 +10,11 @@ device.post('/:id/renew', authMiddleware, deviceController.renewToken)
 device.post('/claim', authMiddleware, deviceController.claimDevice)
 device.get('/list', authMiddleware, deviceController.getMyDevices)
 device.delete('/:deviceId', authMiddleware, deviceController.deleteDevice)
+
+// path for device settings (brightness & volume → IoT via WebSocket)
+device.post('/settings/brightness', authMiddleware, deviceController.setBrightness)
+device.post('/settings/volume', authMiddleware, deviceController.setVolume)
+
 // path for device iot
 device.get('/poll/:deviceIotId', deviceController.checkClaimStatus)
 

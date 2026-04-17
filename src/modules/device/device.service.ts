@@ -2,6 +2,9 @@ import * as deviceRepo from './device.repo'
 import { ResponseError } from '@/utils/responseError'
 import { generateIotToken } from '@/utils/jwt'
 import { getConfig } from '@/config/env'
+import { sendToIoT } from '@/modules/websocket/ws.service'
+import { logger } from '@/utils/logger'
+import type { Bindings } from '@/config/env'
 
 export const checkClaimStatus = async (deviceIotId: string) => {
   const config = getConfig()
@@ -100,4 +103,42 @@ export const deleteDevice = async (userId: string, deviceId: string) => {
   await deviceRepo.deleteDeviceById(deviceId)
 
   return { success: true, message: 'Perangkat berhasil dihapus.' }
+}
+
+// ====================================================
+// 📡 PENGATURAN HARDWARE: BRIGHTNESS & VOLUME
+// ====================================================
+
+export const setBrightness = async (userId: string, deviceId: string, value: number, env: Bindings) => {
+  const device = await deviceRepo.findDeviceById(deviceId)
+
+  if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
+  if (device.userId !== userId) throw new ResponseError(403, 'Akses ditolak.')
+
+  try {
+    await sendToIoT(deviceId, 'CMD_SET_BRIGHTNESS', { value }, env)
+  } catch (error: any) {
+    logger.error(`[Brightness] Gagal terhubung ke device ${deviceId}. Perangkat offline.`)
+    throw new ResponseError(500, 'Gagal mengubah kecerahan. Pastikan perangkat Rinchan menyala dan terhubung ke WiFi.')
+  }
+
+  logger.info(`[💡] Brightness diubah menjadi ${value}% untuk device ${deviceId}`)
+  return { success: true, message: `Kecerahan berhasil diubah menjadi ${value}%.` }
+}
+
+export const setVolume = async (userId: string, deviceId: string, value: number, env: Bindings) => {
+  const device = await deviceRepo.findDeviceById(deviceId)
+
+  if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
+  if (device.userId !== userId) throw new ResponseError(403, 'Akses ditolak.')
+
+  try {
+    await sendToIoT(deviceId, 'CMD_SET_VOLUME', { value }, env)
+  } catch (error: any) {
+    logger.error(`[Volume] Gagal terhubung ke device ${deviceId}. Perangkat offline.`)
+    throw new ResponseError(500, 'Gagal mengubah volume. Pastikan perangkat Rinchan menyala dan terhubung ke WiFi.')
+  }
+
+  logger.info(`[🔊] Volume diubah menjadi ${value}% untuk device ${deviceId}`)
+  return { success: true, message: `Volume berhasil diubah menjadi ${value}%.` }
 }

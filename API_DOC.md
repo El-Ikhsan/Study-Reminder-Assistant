@@ -438,6 +438,96 @@ Menghapus perangkat beserta semua sesi Pomodoro yang terkait.
 
 ---
 
+### POST /api/device/settings/brightness
+
+Mengubah kecerahan layar (brightness) perangkat IoT secara real-time melalui WebSocket.
+
+**Headers:**
+
+| Header          | Nilai                      |
+| --------------- | -------------------------- |
+| `Authorization` | `Bearer <accessToken>`     |
+| `Content-Type`  | `application/json`         |
+
+**Request Body (JSON):**
+
+```json
+{
+  "deviceId": "uuid-perangkat-36-karakter",
+  "value": 75
+}
+```
+
+| Field      | Tipe     | Wajib | Validasi                                    |
+| ---------- | -------- | ----- | ------------------------------------------- |
+| `deviceId` | `string` | ✅    | Tepat 36 karakter (UUID)                     |
+| `value`    | `number` | ✅    | Integer, min 0, max 100 (persentase)         |
+
+**Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "message": "Kecerahan berhasil diubah menjadi 75%."
+}
+```
+
+**Pesan WebSocket yang dikirim ke IoT:**
+
+```json
+{
+  "type": "CMD_SET_BRIGHTNESS",
+  "payload": { "value": 75 }
+}
+```
+
+---
+
+### POST /api/device/settings/volume
+
+Mengubah volume audio perangkat IoT secara real-time melalui WebSocket.
+
+**Headers:**
+
+| Header          | Nilai                      |
+| --------------- | -------------------------- |
+| `Authorization` | `Bearer <accessToken>`     |
+| `Content-Type`  | `application/json`         |
+
+**Request Body (JSON):**
+
+```json
+{
+  "deviceId": "uuid-perangkat-36-karakter",
+  "value": 50
+}
+```
+
+| Field      | Tipe     | Wajib | Validasi                                    |
+| ---------- | -------- | ----- | ------------------------------------------- |
+| `deviceId` | `string` | ✅    | Tepat 36 karakter (UUID)                     |
+| `value`    | `number` | ✅    | Integer, min 0, max 100 (persentase)         |
+
+**Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "message": "Volume berhasil diubah menjadi 50%."
+}
+```
+
+**Pesan WebSocket yang dikirim ke IoT:**
+
+```json
+{
+  "type": "CMD_SET_VOLUME",
+  "payload": { "value": 50 }
+}
+```
+
+---
+
 ### GET /api/device/poll/:deviceIotId
 
 **⚠️ Endpoint khusus untuk perangkat IoT (ESP32).** Tidak membutuhkan autentikasi user.  
