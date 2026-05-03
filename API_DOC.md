@@ -794,7 +794,7 @@ Menghapus sesi Pomodoro beserta log-nya berdasarkan session ID.
 
 ---
 
-## 6. WebSocket (IoT)
+## 6. WebSocket
 
 ### GET /api/ws/iot
 
@@ -814,6 +814,76 @@ ws://<host>/api/ws/iot?token=<jwt-iot-token>
 > Alternatif: Bisa juga via Header `Authorization: Bearer <jwt-iot-token>`
 
 Setelah terkoneksi, perangkat akan masuk ke Durable Object room berdasarkan `deviceId` dengan role `iot`.
+
+---
+
+### GET /api/ws/web
+
+**Endpoint WebSocket untuk Frontend Dashboard.**  
+Menerima data sensor telemetri secara real-time dari perangkat IoT yang terhubung di room yang sama.
+
+**Koneksi:**
+
+```
+ws://<host>/api/ws/web?token=<jwt-access-token>&deviceId=<uuid-perangkat>
+```
+
+| Query Param | Tipe     | Wajib | Keterangan                                    |
+| ----------- | -------- | ----- | --------------------------------------------- |
+| `token`     | `string` | ✅    | JWT access token user (dari login)             |
+| `deviceId`  | `string` | ✅    | UUID perangkat (36 karakter)                   |
+
+> **Catatan:** WebSocket tidak bisa mengirim custom header, maka autentikasi dilakukan via query string. Server memverifikasi token dan kepemilikan device sebelum mengizinkan koneksi.
+
+**Flow koneksi:**
+
+1. Server memverifikasi `token` (JWT access token user)
+2. Server memeriksa apakah `deviceId` milik user tersebut
+3. Jika valid, client masuk ke Durable Object room yang sama dengan perangkat IoT
+4. Client menerima broadcast data secara real-time
+
+**Pesan yang diterima oleh Web Client:**
+
+```json
+{
+  "type": "TELEMETRY_UPDATE",
+  "payload": {
+    "temperature": 27.5,
+    "lightLux": 300.2,
+    "noiseLevel": 40.1
+  }
+}
+```
+
+**Error Response (sebelum upgrade WebSocket):**
+
+| Status | Kondisi                                    |
+| ------ | ------------------------------------------ |
+| `401`  | Token tidak ditemukan atau tidak valid       |
+| `400`  | Parameter `deviceId` tidak ada              |
+| `404`  | Device tidak ditemukan                      |
+| `403`  | Device bukan milik user                    |
+
+**Contoh penggunaan di Frontend (JavaScript):**
+
+```javascript
+const token = localStorage.getItem('accessToken');
+const deviceId = 'uuid-perangkat';
+const ws = new WebSocket(`wss://<host>/api/ws/web?token=${token}&deviceId=${deviceId}`);
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if (data.type === 'TELEMETRY_UPDATE') {
+    console.log('Sensor:', data.payload);
+    // { temperature: 27.5, lightLux: 300.2, noiseLevel: 40.1 }
+  }
+};
+
+// Keep-alive ping
+setInterval(() => {
+  if (ws.readyState === WebSocket.OPEN) ws.send('ping');
+}, 30000);
+```
 
 ---
 
