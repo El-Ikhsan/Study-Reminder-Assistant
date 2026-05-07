@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger'
 import type { Bindings } from '@/config/env'
-import * as pomodoroRepo from './pomodoro.repo' 
+import * as pomodoroRepo from './pomodoro.repo'
 import { sendToIoT } from '@/modules/websocket/ws.service'
 import { ResponseError } from '@/utils/responseError'
 import { findDeviceById } from '@/modules/device/device.repo'
@@ -26,8 +26,7 @@ export const startSession = async (deviceId: string, recipe: any, env: Bindings)
     focusDuration: recipe.focusDuration,
     restDuration: recipe.breakDuration,
     targetCycles: recipe.cycles,
-    sensorIntervalSec: recipe.sensorIntervalSec ,
-    condition: (recipe.mode || 'normal') as 'normal' | 'panjang' | 'deadline',
+    media: (recipe.media) as 'Buku' | 'Laptop' | 'HP' | 'Komputer',
     currentCycle: recipe.currentCycle || 1,
     currentMode: (recipe.currentMode || 'fokus') as 'fokus' | 'istirahat',
     currentPhase: (recipe.currentPhase || 'awal') as 'awal' | 'tengah' | 'akhir',
@@ -63,7 +62,9 @@ export const stopSession = async (sessionId: string, deviceId: string, env: Bind
 }
 
 export const getPomodoroHistoryById = async (pomodoroId: string) => {
-  return await pomodoroRepo.findPomodoroHistoryBySessionId(pomodoroId)
+  const logs = await pomodoroRepo.findPomodoroLogsBySessionId(pomodoroId)
+  const sensorEvents = await pomodoroRepo.findSensorEventsBySessionId(pomodoroId)
+  return { logs, sensorEvents }
 }
 
 export const getAllPomodoroSessions = async () => {
@@ -78,4 +79,3 @@ export const deletePomodoroById = async (pomodoroId: string) => {
   await pomodoroRepo.deleteSessionById(pomodoroId)
   return { success: true, message: 'Sesi Pomodoro dan history berhasil dihapus.' }
 }
-

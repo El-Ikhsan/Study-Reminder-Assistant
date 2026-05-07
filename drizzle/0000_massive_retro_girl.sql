@@ -1,3 +1,30 @@
+CREATE TABLE `ai_pomodoro_logs` (
+	`id` text(36) PRIMARY KEY NOT NULL,
+	`session_id` text(36) NOT NULL,
+	`log_type` text NOT NULL,
+	`current_cycle` integer NOT NULL,
+	`pomodoro_mode` text NOT NULL,
+	`trigger_context` text NOT NULL,
+	`ai_response` text NOT NULL,
+	`emotion` text(20) NOT NULL,
+	`created_at` integer DEFAULT (strftime('%s', 'now')) NOT NULL,
+	FOREIGN KEY (`session_id`) REFERENCES `pomodoro_sessions`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE TABLE `ai_sensor_events` (
+	`id` text(36) PRIMARY KEY NOT NULL,
+	`session_id` text(36) NOT NULL,
+	`event_type` text NOT NULL,
+	`trigger_context` text NOT NULL,
+	`ai_response` text NOT NULL,
+	`emotion` text(20) NOT NULL,
+	`temperature_at_time` real NOT NULL,
+	`light_at_time` real NOT NULL,
+	`noise_at_time` real NOT NULL,
+	`created_at` integer DEFAULT (strftime('%s', 'now')) NOT NULL,
+	FOREIGN KEY (`session_id`) REFERENCES `pomodoro_sessions`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `devices` (
 	`id` text(36) PRIMARY KEY NOT NULL,
 	`device_iot_id` text(10) NOT NULL,
@@ -11,32 +38,13 @@ CREATE TABLE `devices` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `devices_device_iot_id_unique` ON `devices` (`device_iot_id`);--> statement-breakpoint
-CREATE TABLE `pomodoro_logs` (
-	`id` text(36) PRIMARY KEY NOT NULL,
-	`device_id` text(36) NOT NULL,
-	`session_id` text(36),
-	`current_cycle` integer,
-	`pomodoro_mode` text,
-	`time_phase` text,
-	`trigger_context` text NOT NULL,
-	`ai_response` text NOT NULL,
-	`emotion` text(20) NOT NULL,
-	`temperature_at_time` real,
-	`light_at_time` real,
-	`noise_at_time` real,
-	`created_at` integer DEFAULT (strftime('%s', 'now')) NOT NULL,
-	FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`session_id`) REFERENCES `pomodoro_sessions`(`id`) ON UPDATE no action ON DELETE cascade
-);
---> statement-breakpoint
 CREATE TABLE `pomodoro_sessions` (
 	`id` text(36) PRIMARY KEY NOT NULL,
 	`device_id` text(36) NOT NULL,
 	`focus_duration` integer NOT NULL,
 	`rest_duration` integer NOT NULL,
 	`target_cycles` integer NOT NULL,
-	`condition` text DEFAULT 'normal',
-	`sensor_interval_sec` integer DEFAULT 60,
+	`media` text DEFAULT 'Laptop' NOT NULL,
 	`current_cycle` integer DEFAULT 1,
 	`current_mode` text DEFAULT 'fokus',
 	`current_phase` text DEFAULT 'awal',
@@ -56,16 +64,6 @@ CREATE TABLE `refresh_tokens` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `refresh_tokens_token_unique` ON `refresh_tokens` (`token`);--> statement-breakpoint
-CREATE TABLE `sensor_telemetry` (
-	`id` text(36) PRIMARY KEY NOT NULL,
-	`device_id` text(36) NOT NULL,
-	`temperature` real NOT NULL,
-	`light_lux` real NOT NULL,
-	`noise_level` real NOT NULL,
-	`created_at` integer DEFAULT (strftime('%s', 'now')) NOT NULL,
-	FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON UPDATE no action ON DELETE cascade
-);
---> statement-breakpoint
 CREATE TABLE `users` (
 	`id` text(36) PRIMARY KEY NOT NULL,
 	`email` text(70) NOT NULL,

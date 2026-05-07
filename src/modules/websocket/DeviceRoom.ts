@@ -9,6 +9,7 @@ export class DeviceRoom {
   state: DurableObjectState
   env: any
   audioStreams: Map<string, Uint8Array[]> = new Map()
+  latestSensor: { temperature: number, lightLux: number, noiseLevel: number } = { temperature: 0, lightLux: 0, noiseLevel: 0 }
 
   constructor(state: DurableObjectState, env: any) { this.state = state; this.env = env }
 
@@ -74,33 +75,65 @@ export class DeviceRoom {
         const data = JSON.parse(message)
         switch (data.type) {
           case 'TELEMETRY_UPDATE':
-            // await wsRepo.saveTelemetryForDO(this.env, { deviceId: attachment.deviceId, ...data.payload })
-
+            this.latestSensor = {
+              temperature: data.payload.temperature,
+              lightLux: data.payload.lightLux,
+              noiseLevel: data.payload.noiseLevel
+            };
             // 📡 Broadcast data telemetri ke semua Web Client yang terhubung
+            // (Catatan: wsRepo.saveTelemetryForDO sudah dihapus sesuai schema baru)
             this.broadcastToWeb(attachment.deviceId, JSON.stringify({
               type: 'TELEMETRY_UPDATE',
               payload: data.payload
             }))
             break
+
           case 'SENSOR_REPORT_FOR_AI':
             const sensorRes = await wsService.processSensorReport(attachment.deviceId, data.payload, this.env)
-            if (sensorRes.aiHandled) ws.send(JSON.stringify({ type: 'AI_RESPONSE', payload: { emotion: sensorRes.emotion, text: sensorRes.text } }))
+
+            if (sensorRes.aiHandled) {
+              // 1. KONDISI BERUBAH: Kirim teks AI dan update memori
+              ws.send(JSON.stringify({
+                type: 'AI_RESPONSE',
+                payload: {
+                  emotion: sensorRes.emotion,
+                  text: sensorRes.text,
+                  newCondition: sensorRes.newCondition // ✨ WAJIB DIKIRIM KE ESP32
+                }
+              }))
+            } else {
+              // 2. KONDISI SAMA: AI Diam, TAPI kita wajib update memori di ESP32
+              ws.send(JSON.stringify({
+                type: 'UPDATE_SENSOR_STATE',
+                payload: {
+                  newCondition: sensorRes.newCondition // ✨ WAJIB DIKIRIM KE ESP32
+                }
+              }))
+            }
             break
+
           case 'PHASE_REPORT':
-            const phaseRes = await wsService.processPhaseReport(data.payload.sessionId, attachment.deviceId, data.payload.currentCycle, data.payload.mode, data.payload.durationMin, data.payload.remainingMin, data.payload.condition, this.env)
+            const phaseRes = await wsService.processPhaseReport(attachment.deviceId, data.payload, this.latestSensor, this.env)
             ws.send(JSON.stringify({ type: 'AI_RESPONSE', payload: { emotion: phaseRes.emotion, text: phaseRes.text } }))
             break
+
           case 'SESSION_COMPLETED':
-            await wsRepo.updateSessionStatusForDO(this.env, data.payload.sessionId, 'completed')
-            ws.send(JSON.stringify({ type: 'AI_RESPONSE', payload: { emotion: 'happy', text: 'Kerja bagus. Kamu berhasil bertahan sampai akhir.' } }))
+            const finishRes = await wsService.processSessionCompleted(attachment.deviceId, data.payload, this.latestSensor, this.env)
+            ws.send(JSON.stringify({
+              type: 'AI_RESPONSE',
+              payload: { emotion: finishRes.emotion, text: finishRes.text }
+            }))
             break
+
           case 'SESSION_STOPPED':
             await wsRepo.updateSessionStatusForDO(this.env, data.payload.sessionId, 'cancelled')
             break
+
           case 'AUDIO_STREAM_START':
             logger.info(`[🎤] Membuka buffer audio untuk device: ${attachment.deviceId}`);
             this.audioStreams.set(attachment.deviceId, []);
             break;
+
           case 'AUDIO_STREAM_END':
             logger.info(`[🎤] Menutup buffer audio dan memulai transkripsi & pemikiran AI...`);
             const chunks = this.audioStreams.get(attachment.deviceId);
@@ -108,7 +141,7 @@ export class DeviceRoom {
             if (chunks && chunks.length > 0) {
 
               // ✨ Panggil fungsi raksasa yang baru kita buat
-              const chatResult = await wsService.processVoiceChat(chunks, this.env);
+              const chatResult = await wsService.processVoiceChat(chunks, this.latestSensor, this.env);
 
               // Kirim jawaban AI langsung ke ESP32
               ws.send(JSON.stringify({

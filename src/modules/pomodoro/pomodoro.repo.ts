@@ -1,16 +1,15 @@
 import { getDb } from '@/db/client'
-import { pomodoroSessions, pomodoroLogs } from '@/db/schema'
+import { pomodoroSessions, aiPomodoroLogs, aiSensorEvents } from '@/db/schema'
 import { eq, sql, count } from 'drizzle-orm'
 import { ResponseError } from '@/utils/responseError'
 import { logger } from '@/utils/logger'
 
 export const createSession = async (data: {
   id: string; deviceId: string; focusDuration: number; restDuration: number
-  targetCycles: number; condition: 'normal' | 'panjang' | 'deadline'
+  targetCycles: number; media: 'Buku' | 'Laptop' | 'HP' | 'Komputer'
   currentCycle: number; currentMode: 'fokus' | 'istirahat'
   currentPhase: 'awal' | 'tengah' | 'akhir'
   status: 'running' | 'paused' | 'completed' | 'cancelled'
-  sensorIntervalSec: number
 }) => {
   try {
     const db = getDb()
@@ -43,9 +42,10 @@ export const createSession = async (data: {
     throw new ResponseError(500, 'Terjadi kesalahan saat menyimpan sesi Pomodoro.')
   }
 }
+
 export const updateSessionStatus = async (sessionId: string, newStatus: 'running' | 'paused' | 'completed' | 'cancelled') => {
   try {
-    const db = getDb() // Aman karena dipanggil REST API (Web Stop)
+    const db = getDb()
     await db.update(pomodoroSessions).set({ status: newStatus }).where(eq(pomodoroSessions.id, sessionId))
     logger.info(`Sesi Pomodoro ${sessionId} mengubah status menjadi: ${newStatus}.`)
   } catch (error) {
@@ -54,15 +54,21 @@ export const updateSessionStatus = async (sessionId: string, newStatus: 'running
   }
 }
 
-export const findPomodoroHistoryBySessionId = async (sessionId: string) => {
+export const findPomodoroLogsBySessionId = async (sessionId: string) => {
   const db = getDb()
-  return await db.select().from(pomodoroLogs).where(eq(pomodoroLogs.sessionId, sessionId))
+  return await db.select().from(aiPomodoroLogs).where(eq(aiPomodoroLogs.sessionId, sessionId))
+}
+
+export const findSensorEventsBySessionId = async (sessionId: string) => {
+  const db = getDb()
+  return await db.select().from(aiSensorEvents).where(eq(aiSensorEvents.sessionId, sessionId))
 }
 
 export const findAllPomodoroSessions = async () => {
   const db = getDb()
   return await db.select().from(pomodoroSessions)
 }
+
 export const findPomodoroSessionById = async (sessionId: string) => {
   const db = getDb()
   const result = await db.select().from(pomodoroSessions).where(eq(pomodoroSessions.id, sessionId)).limit(1)
