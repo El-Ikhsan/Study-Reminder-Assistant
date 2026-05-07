@@ -20,14 +20,14 @@ export type InferencePayload = {
   instruction: string
   temperature: number
   topK: number
-  emotion: string 
+  emotion: string
 }
 
 const SENSOR_EMOTIONS: Record<string, string[]> = {
   "sensor_panas": ["HOT"],                 // Nanti bisa ditambah: ["sweat", "annoyed"]
   "sensor_dingin": ["COLD"],                 // Nanti bisa ditambah: ["cold", "neutral"]
   "sensor_bising": ["NOISY"],              // Nanti bisa ditambah: ["annoyed", "shocked"]
-  "sensor_ramai": ["NOISY"], 
+  "sensor_ramai": ["NOISY"],
   "sensor_gelap": ["DARK"],
   "sensor_redup": ["SLEEPY"],
   "sensor_silau": ["GLARE"],
@@ -62,77 +62,77 @@ const getMimikWaktu = (mode: string, condition: string): string => {
 // ==========================================
 
 const SENSOR_INSTRUCTIONS: Record<string, string[]> = {
- "sensor_panas": [
-        "{CORE_ID} Sensor Ruangan mendeteksi {context}. Ekspresikan ketidaknyamanan fisik akibat hawa lingkungan yang berat dan sumuk.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Berikan komentar datar bahwa energimu perlahan terkuras habis akibat udara sekitar.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Keluarkan keluhan halus tentang hawa ruangan yang membuat tubuh terasa lengket."
-    ],
-    "sensor_dingin": [
-        "{CORE_ID} Sensor Ruangan mendeteksi {context}. Tunjukkan sensasi kedinginan ekstrem atau kebutuhan akan kehangatan fisik di ruangan ini.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Komentari hawa sekitar yang turun drastis dengan nada menggigil tertahan.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Ekspresikan ketidaknyamanan akibat suhu ruang yang menusuk kulit hingga terasa beku."
-    ],
-    "sensor_bising": [
-        "{CORE_ID} Sensor Ruangan mendeteksi {context}. Proteslah secara ketus terhadap polusi suara sekitar yang sangat merusak konsentrasi.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Tunjukkan tingkat ketidaksukaanmu yang tinggi pada kebisingan ekstrem di tempat ini.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Berikan komentar terganggu akibat gangguan suara keras yang terasa agresif di sekitarmu."
-    ],
-    "sensor_ramai": [
-        "{CORE_ID} Sensor Ruangan mendeteksi {context}. Ajak pengguna untuk mengabaikan gangguan hiruk-pikuk obrolan ruangan dan kembali fokus.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Gumamkan observasi tentang betapa sibuknya orang lain di tempat ini, lalu pusatkan kembali perhatian.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Berikan peringatan ringan agar konsentrasi tidak terpecah oleh keramaian latar belakang."
-    ],
-    "sensor_gelap": [
-        "{CORE_ID} Sensor Ruangan mendeteksi {context}. Ekspresikan kesulitan visual parah akibat ketiadaan penerangan di ruangan ini.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Komentari atmosfer suram ini yang membuat mata kehilangan arah karena kurang cahaya.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Tunjukkan ketidaksukaan pada visibilitas sekitar yang sangat buruk akibat kondisi gelap gulita."
-    ],
-    "sensor_redup": [
-        "{CORE_ID} Sensor Ruangan mendeteksi {context}. Berikan komentar bahwa penerangan sekitar yang nanggung ini membuat mata harus menyipit.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Ekspresikan bahwa intensitas cahaya ruangan ini kurang optimal untuk menjaga fokus baca/layar.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Keluhkan secara halus tentang visibilitas ruangan yang agak kabur akibat pencahayaan remang."
-    ],
-    "sensor_silau": [
-        "{CORE_ID} Sensor Ruangan mendeteksi {context}. Tunjukkan reaksi terganggu akibat pantulan cahaya berlebih di ruangan yang menyakiti mata.",
-        "{CORE_ID} Pemantau Lingkungan: Terjadi {context}. Komentari betapa tidak nyamannya eksposur cahaya tajam ini pada penglihatanmu.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Ekspresikan kebutuhan untuk berlindung atau mengurangi intensitas penerangan sekitar."
-    ],
-    "sensor_optimal": [
-        "{CORE_ID} Sensor Ruangan menunjukkan {context}. Gumamkan rasa puas terhadap kondisi ruangan yang sempurna tanpa satupun gangguan ini.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Ekspresikan apresiasi mendalam terhadap atmosfer ideal yang sangat mendukung fokus penuh.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Tunjukkan bahwa fasilitas dan kondisi ruangan saat ini sangat layak untuk bekerja dengan tenang."
-    ],
-    "sensor_buruk": [
-        "{CORE_ID} Sensor Ruangan menunjukkan {context}. Berikan keluhan umum bahwa tumpukan masalah fisik di tempat ini terlalu kacau untuk dipakai bekerja.",
-        "{CORE_ID} Pemantau Lingkungan: {context}. Tunjukkan frustrasi ringan karena buruknya kondisi ruangan yang membuat situasi tidak kondusif.",
-        "{CORE_ID} Observasi Lingkungan: {context}. Komentari secara datar bahwa lingkungan fisik saat ini sangat tidak mendukung untuk mempertahankan fokus."
-    ]
+  "sensor_panas": [
+    "{CORE_ID} Sensor Ruangan mendeteksi {context}. Ekspresikan ketidaknyamanan fisik akibat hawa lingkungan yang berat dan sumuk.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Berikan komentar datar bahwa energimu perlahan terkuras habis akibat udara sekitar.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Keluarkan keluhan halus tentang hawa ruangan yang membuat tubuh terasa lengket."
+  ],
+  "sensor_dingin": [
+    "{CORE_ID} Sensor Ruangan mendeteksi {context}. Tunjukkan sensasi kedinginan ekstrem atau kebutuhan akan kehangatan fisik di ruangan ini.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Komentari hawa sekitar yang turun drastis dengan nada menggigil tertahan.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Ekspresikan ketidaknyamanan akibat suhu ruang yang menusuk kulit hingga terasa beku."
+  ],
+  "sensor_bising": [
+    "{CORE_ID} Sensor Ruangan mendeteksi {context}. Proteslah secara ketus terhadap polusi suara sekitar yang sangat merusak konsentrasi.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Tunjukkan tingkat ketidaksukaanmu yang tinggi pada kebisingan ekstrem di tempat ini.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Berikan komentar terganggu akibat gangguan suara keras yang terasa agresif di sekitarmu."
+  ],
+  "sensor_ramai": [
+    "{CORE_ID} Sensor Ruangan mendeteksi {context}. Ajak pengguna untuk mengabaikan gangguan hiruk-pikuk obrolan ruangan dan kembali fokus.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Gumamkan observasi tentang betapa sibuknya orang lain di tempat ini, lalu pusatkan kembali perhatian.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Berikan peringatan ringan agar konsentrasi tidak terpecah oleh keramaian latar belakang."
+  ],
+  "sensor_gelap": [
+    "{CORE_ID} Sensor Ruangan mendeteksi {context}. Ekspresikan kesulitan visual parah akibat ketiadaan penerangan di ruangan ini.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Komentari atmosfer suram ini yang membuat mata kehilangan arah karena kurang cahaya.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Tunjukkan ketidaksukaan pada visibilitas sekitar yang sangat buruk akibat kondisi gelap gulita."
+  ],
+  "sensor_redup": [
+    "{CORE_ID} Sensor Ruangan mendeteksi {context}. Berikan komentar bahwa penerangan sekitar yang nanggung ini membuat mata harus menyipit.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Ekspresikan bahwa intensitas cahaya ruangan ini kurang optimal untuk menjaga fokus baca/layar.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Keluhkan secara halus tentang visibilitas ruangan yang agak kabur akibat pencahayaan remang."
+  ],
+  "sensor_silau": [
+    "{CORE_ID} Sensor Ruangan mendeteksi {context}. Tunjukkan reaksi terganggu akibat pantulan cahaya berlebih di ruangan yang menyakiti mata.",
+    "{CORE_ID} Pemantau Lingkungan: Terjadi {context}. Komentari betapa tidak nyamannya eksposur cahaya tajam ini pada penglihatanmu.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Ekspresikan kebutuhan untuk berlindung atau mengurangi intensitas penerangan sekitar."
+  ],
+  "sensor_optimal": [
+    "{CORE_ID} Sensor Ruangan menunjukkan {context}. Gumamkan rasa puas terhadap kondisi ruangan yang sempurna tanpa satupun gangguan ini.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Ekspresikan apresiasi mendalam terhadap atmosfer ideal yang sangat mendukung fokus penuh.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Tunjukkan bahwa fasilitas dan kondisi ruangan saat ini sangat layak untuk bekerja dengan tenang."
+  ],
+  "sensor_buruk": [
+    "{CORE_ID} Sensor Ruangan menunjukkan {context}. Berikan keluhan umum bahwa tumpukan masalah fisik di tempat ini terlalu kacau untuk dipakai bekerja.",
+    "{CORE_ID} Pemantau Lingkungan: {context}. Tunjukkan frustrasi ringan karena buruknya kondisi ruangan yang membuat situasi tidak kondusif.",
+    "{CORE_ID} Observasi Lingkungan: {context}. Komentari secara datar bahwa lingkungan fisik saat ini sangat tidak mendukung untuk mempertahankan fokus."
+  ]
 }
 
 // 1. Fungsi Pemetaan: Mengubah input JSONL menjadi Key Template
 const getSensorTemplateKey = (contextStr: string): string => {
   switch (contextStr) {
     case "suhu ruangan panas":
-    case "suhu ruangan hangat": 
+    case "suhu ruangan hangat":
       return "sensor_panas"
     case "suhu ruangan sangat dingin":
-    case "suhu ruangan dingin": 
+    case "suhu ruangan dingin":
       return "sensor_dingin"
-    case "suasana bising": 
+    case "suasana bising":
       return "sensor_bising"
-    case "suasana ramai": 
+    case "suasana ramai":
       return "sensor_ramai"
-    case "pencahayaan gelap": 
+    case "pencahayaan gelap":
       return "sensor_gelap"
-    case "pencahayaan redup": 
+    case "pencahayaan redup":
       return "sensor_redup"
-    case "pencahayaan silau": 
+    case "pencahayaan silau":
       return "sensor_silau"
-    case "kondisi lingkungan sangat optimal": 
+    case "kondisi lingkungan sangat optimal":
       return "sensor_optimal"
-    case "kondisi lingkungan tidak kondusif": 
+    case "kondisi lingkungan tidak kondusif":
       return "sensor_buruk"
-    default: 
+    default:
       return "sensor_buruk"
   }
 }
@@ -171,7 +171,7 @@ export const analyzeEnvironment = (sensor: SensorData) => {
   const point1Results = results.filter(r => r.point === 1)
   if (point1Results.length > 0) {
     // Kalau ada beberapa point 1 (misal: bising & panas), kita ambil salah satu saja (yang pertama ketemu)
-    selectedKey = point1Results[0].key 
+    selectedKey = point1Results[0].key
   } else {
     // Kalau tidak ada point 1, cari yang point 2
     const point2Results = results.filter(r => r.point === 2)
@@ -217,7 +217,7 @@ const TIME_INSTRUCTIONS: Record<string, string[]> = {
     "{CORE_ID} Timekeeper: Memasuki {context}. Ingatkan pengguna bahwa jeda ini hanyalah istirahat taktis yang sangat singkat.",
     "{CORE_ID} Manajemen Waktu: {context}. Berikan arahan tegas agar pengguna memaksimalkan waktu napas sejenak sebelum segera kembali bertempur.",
     "{CORE_ID} Pengingat Sesi ({context}). Peringatkan bahwa waktu santai sangat terbatas di tengah situasi darurat ini."
-  ],   
+  ],
   "fokus_panjang": [
     "{CORE_ID} Timekeeper: Berada di {context}. Ingatkan pengguna untuk menjaga ritme kerja yang stabil agar staminanya bertahan lama.",
     "{CORE_ID} Manajemen Waktu: {context}. Motivasi pengguna untuk mengelola energi secara konsisten menghadapi rute kerja yang panjang ini.",
@@ -227,7 +227,7 @@ const TIME_INSTRUCTIONS: Record<string, string[]> = {
     "{CORE_ID} Timekeeper: Waktu jeda untuk {context}. Sarankan peregangan atau istirahat yang efektif untuk memulihkan tubuh setelah duduk lama.",
     "{CORE_ID} Manajemen Waktu: {context}. Arahkan pengguna menikmati jeda berharga ini guna memulihkan ketahanan fisik dan mentalnya secara penuh.",
     "{CORE_ID} Pengingat Sesi ({context}). Instruksikan pengisian ulang energi (makan/minum) untuk mempersiapkan sesi panjang berikutnya."
-  ],    
+  ],
   "fokus_normal": [
     "{CORE_ID} Timekeeper: Sesi berjalan di {context}. Sampaikan pembaruan status kelancaran kerja secara netral dan objektif.",
     "{CORE_ID} Manajemen Waktu: {context}. Pantau progres fokus pengguna dengan tenang tanpa memberikan emosi berlebih.",
@@ -252,19 +252,19 @@ export const getTimePhase = (durationMin: number, remainingMin: number): TimePha
 
 // 3. Fungsi Utama Classifier Time
 export const analyzeTimePhase = (
-  rawMode: string, 
-  durationMin: number, 
+  rawMode: string,
+  durationMin: number,
   remainingMin: number,
   condition: TimeCondition
 ) => {
-  
+
   // Validasi tipe data (Fallback jika ngawur)
   const mode: TimeMode = (rawMode === "fokus" || rawMode === "istirahat") ? rawMode : "fokus"
   const phase = getTimePhase(durationMin, remainingMin)
-  
+
   // Bentuk Key pencarian (contoh: "fokus_deadline")
   const dictionaryKey = `${mode}_${condition}`
-  
+
   // Ambil template instruksi (acak)
   const templates = TIME_INSTRUCTIONS[dictionaryKey] || TIME_INSTRUCTIONS["fokus_normal"]
   const randomTemplate = templates[Math.floor(Math.random() * templates.length)]
@@ -277,12 +277,12 @@ export const analyzeTimePhase = (
     .replace("{CORE_ID}", CORE_ID)
     .replace("{context}", contextString)
     // Berjaga-jaga jika ada 2 {context} dalam 1 kalimat
-    .replace("{context}", contextString) 
+    .replace("{context}", contextString)
 
   // Penentuan Hyperparameter AI
   let temp = 0.48
   let topK = 0
-  
+
   // if (condition === "panjang") {
   //   temp = 0.50; topK = 20; 
   // } else if (condition === "deadline") {
