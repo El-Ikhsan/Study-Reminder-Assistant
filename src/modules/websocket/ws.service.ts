@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger'
 import type { Bindings } from '@/config/env'
-import { analyzeEnvironment, getPomodoroPayload, getPomodoroEnvString } from '@/modules/classifier/classifier.service'
+import { analyzeEnvironment, getPomodoroPayload } from '@/modules/classifier/classifier.service'
 import * as wsRepo from './ws.repo'
 
 // --- AI CALLER KHUSUS WS ---
@@ -147,27 +147,25 @@ export const processPhaseReport = async (
   env: Bindings
 ) => {
 
-  const csvCondition = getPomodoroEnvString(sensorContext.temperature, sensorContext.lightLux, sensorContext.noiseLevel);
-
+  // ✨ FIX: Parameter csvCondition dibuang karena Pomodoro murni fokus ke manajemen waktu
   const timePayload = getPomodoroPayload(
     timeData.mode,
     timeData.phase,
     timeData.durationMin,
     timeData.remainingMin,
     timeData.currentCycle,
-    timeData.media,
-    csvCondition // Masuk sebagai "Status Lingkungan: Optimal / Panas / dll"
+    timeData.media
   )
 
   const rinchanText = await askRinchanAIForDO(
-    timePayload.userPrompt,
-    timePayload.systemPrompt,
+    timePayload.input,         // ✨ FIX: Ubah userPrompt menjadi input
+    timePayload.instruction,   // ✨ FIX: Ubah systemPrompt menjadi instruction
     timePayload.inferenceParams,
     env
   )
 
   const mimikWajah = timePayload.emotion
-  const promptLower = timePayload.userPrompt.toLowerCase();
+  const promptLower = timePayload.input.toLowerCase(); // ✨ FIX: Ubah userPrompt menjadi input
   const phaseExtracted = promptLower.includes("awal") ? "awal" : promptLower.includes("tengah") ? "tengah" : "akhir"
 
   // 1. UPDATE STATE UNTUK DASHBOARD WEB
@@ -179,7 +177,7 @@ export const processPhaseReport = async (
     logType: 'phase_alert',
     currentCycle: timeData.currentCycle,
     pomodoroMode: timeData.mode,
-    triggerContext: timePayload.userPrompt,
+    triggerContext: timePayload.input, // ✨ FIX: Ubah userPrompt menjadi input
     aiResponse: rinchanText,
     emotion: mimikWajah
   })
@@ -194,29 +192,26 @@ export const processSessionCompleted = async (
   sensorContext: { temperature: number, lightLux: number, noiseLevel: number },
   env: Bindings
 ) => {
-  // 1. Dapatkan terjemahan kondisi ruangan saat ini
-  const csvCondition = getPomodoroEnvString(sensorContext.temperature, sensorContext.lightLux, sensorContext.noiseLevel);
-
-  // 2. Gunakan payload waktu dengan sisa menit = 0 agar menjadi "Pomodoro Selesai"
+  // 1. Gunakan payload waktu dengan sisa menit = 0 agar menjadi "Pomodoro Selesai"
+  // ✨ FIX: Parameter csvCondition dibuang
   const timePayload = getPomodoroPayload(
     "fokus", // Mode bebas (akan di-override karena menit = 0)
     "akhir", // Phase bebas
-    25, // Durasi bebas
-    0, // ✨ INI KUNCI UTAMANYA: 0 menit = Selesai
+    25,      // Durasi bebas
+    0,       // ✨ INI KUNCI UTAMANYA: 0 menit = Selesai
     data.currentCycle,
-    data.media,
-    csvCondition
+    data.media
   );
 
-  // 3. Tembak ke LLM (Qwen)
+  // 2. Tembak ke LLM (Qwen)
   const rinchanText = await askRinchanAIForDO(
-    timePayload.userPrompt,
-    timePayload.systemPrompt,
+    timePayload.input,         // ✨ FIX: Ubah userPrompt menjadi input
+    timePayload.instruction,   // ✨ FIX: Ubah systemPrompt menjadi instruction
     timePayload.inferenceParams,
     env
   );
 
-  // 4. Update Database
+  // 3. Update Database
   await wsRepo.updateSessionStatusForDO(env, data.sessionId, 'completed');
 
   await wsRepo.saveAiPomodoroLogForDO(env, {
@@ -224,7 +219,7 @@ export const processSessionCompleted = async (
     logType: 'system_alert',
     currentCycle: data.currentCycle,
     pomodoroMode: 'istirahat', // Mode akhir
-    triggerContext: timePayload.userPrompt,
+    triggerContext: timePayload.input, // ✨ FIX: Ubah userPrompt menjadi input
     aiResponse: rinchanText,
     emotion: timePayload.emotion
   });

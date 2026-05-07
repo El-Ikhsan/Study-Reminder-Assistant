@@ -98,17 +98,15 @@ export class DeviceRoom {
                 payload: {
                   emotion: sensorRes.emotion,
                   text: sensorRes.text,
-                  newCondition: sensorRes.newCondition // ✨ WAJIB DIKIRIM KE ESP32
+                  newCondition: sensorRes.newCondition // ✨ ESP32 akan menyerap kondisi baru ini
                 }
               }))
             } else {
-              // 2. KONDISI SAMA: AI Diam, TAPI kita wajib update memori di ESP32
-              ws.send(JSON.stringify({
-                type: 'UPDATE_SENSOR_STATE',
-                payload: {
-                  newCondition: sensorRes.newCondition // ✨ WAJIB DIKIRIM KE ESP32
-                }
-              }))
+              // 2. AI DIAM (aiHandled = false).
+              // ✨ FIX: JANGAN update memori ESP32 jika AI diam karena transisi di-skip.
+              // Biarkan ESP32 memegang "lastCondition" lamanya agar dia tidak kebingungan.
+              // Kita HAPUS pengiriman 'UPDATE_SENSOR_STATE' di sini.
+              logger.debug(`[DO] Sensor membaik/stabil tapi AI diam (transisi di-skip). Tidak mengupdate memori ESP32.`);
             }
             break
 
