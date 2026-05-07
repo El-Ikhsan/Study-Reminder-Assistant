@@ -581,48 +581,18 @@ Digunakan perangkat untuk melakukan polling status klaim dan mendapatkan API key
 
 ---
 
-## 4. Sensor
 
-### GET /api/sensors/:deviceId
-
-Mengambil 50 data telemetri terbaru dari perangkat (diurutkan terbaru lebih dulu).
-
-**Headers:** Tidak ada middleware autentikasi pada endpoint ini
-
-**URL Params:**
-
-| Param      | Tipe     | Keterangan               |
-| ---------- | -------- | ------------------------ |
-| `deviceId` | `string` | UUID perangkat (36 char)   |
-
-**Response `200 OK`:**
-
-```json
-{
-  "success": true,
-  "message": "Data telemetri berhasil diambil",
-  "data": [
-    {
-      "id": "uuid",
-      "deviceId": "uuid",
-      "temperature": 27.5,
-      "lightLux": 300.2,
-      "noiseLevel": 40.1,
-      "createdAt": "2026-04-12T17:42:11.000Z"
-    }
-  ]
-}
-```
-
----
-
-## 5. Pomodoro
+## 4. Pomodoro
 
 ### POST /api/pomodoro/start
 
 Memulai sesi Pomodoro baru dan mengirim perintah ke perangkat IoT via Durable Object WebSocket.
 
-**Headers:** Tidak ada middleware autentikasi pada endpoint ini (dipanggil langsung)
+**Headers:**
+
+| Header          | Nilai                      |
+| --------------- | -------------------------- |
+| `Authorization` | `Bearer <accessToken>`     |
 
 **Request Body (JSON):**
 
@@ -633,8 +603,7 @@ Memulai sesi Pomodoro baru dan mengirim perintah ke perangkat IoT via Durable Ob
     "focusDuration": 25,
     "breakDuration": 5,
     "cycles": 4,
-    "sensorIntervalSec": 60,
-    "mode": "normal",
+    "media": "Laptop",
     "currentCycle": 1,
     "currentMode": "fokus",
     "currentPhase": "awal",
@@ -649,8 +618,7 @@ Memulai sesi Pomodoro baru dan mengirim perintah ke perangkat IoT via Durable Ob
 | `recipe.focusDuration`    | `number` | ✅    | Integer positif (menit)                                       |
 | `recipe.breakDuration`    | `number` | ✅    | Integer positif (menit)                                       |
 | `recipe.cycles`           | `number` | ✅    | Integer positif                                               |
-| `recipe.sensorIntervalSec`| `number`| ✅    | Integer positif (detik)                                       |
-| `recipe.mode`             | `string` | ❌    | `"normal"` \| `"panjang"` \| `"deadline"`. Default: `"normal"` |
+| `recipe.media`            | `string` | ❌    | `"Buku"` \| `"Laptop"` \| `"HP"` \| `"Komputer"`. Default: `"Laptop"` |
 | `recipe.currentCycle`     | `number` | ❌    | Integer positif. Default: `1`                                  |
 | `recipe.currentMode`      | `string` | ❌    | `"fokus"` \| `"istirahat"`. Default: `"fokus"`                 |
 | `recipe.currentPhase`     | `string` | ❌    | `"awal"` \| `"tengah"` \| `"akhir"`. Default: `"awal"`        |
@@ -672,7 +640,11 @@ Memulai sesi Pomodoro baru dan mengirim perintah ke perangkat IoT via Durable Ob
 
 Menghentikan (membatalkan) sesi Pomodoro yang sedang berjalan.
 
-**Headers:** Tidak ada middleware autentikasi pada endpoint ini
+**Headers:**
+
+| Header          | Nilai                      |
+| --------------- | -------------------------- |
+| `Authorization` | `Bearer <accessToken>`     |
 
 **Request Body (JSON):**
 
@@ -703,7 +675,11 @@ Menghentikan (membatalkan) sesi Pomodoro yang sedang berjalan.
 
 Mengambil semua sesi Pomodoro yang ada di database.
 
-**Headers:** Tidak ada middleware autentikasi pada endpoint ini
+**Headers:**
+
+| Header          | Nilai                      |
+| --------------- | -------------------------- |
+| `Authorization` | `Bearer <accessToken>`     |
 
 **Response `200 OK`:**
 
@@ -717,8 +693,7 @@ Mengambil semua sesi Pomodoro yang ada di database.
       "focusDuration": 25,
       "restDuration": 5,
       "targetCycles": 4,
-      "condition": "normal",
-      "sensorIntervalSec": 60,
+      "media": "Laptop",
       "currentCycle": 1,
       "currentMode": "fokus",
       "currentPhase": "awal",
@@ -734,9 +709,13 @@ Mengambil semua sesi Pomodoro yang ada di database.
 
 ### GET /api/pomodoro/histories/:pomodoroId
 
-Mengambil log/riwayat AI (Pomodoro Logs) berdasarkan session ID.
+Mengambil riwayat log AI (`aiPomodoroLogs`) dan anomali sensor (`aiSensorEvents`) berdasarkan session ID.
 
-**Headers:** Tidak ada middleware autentikasi pada endpoint ini
+**Headers:**
+
+| Header          | Nilai                      |
+| --------------- | -------------------------- |
+| `Authorization` | `Bearer <accessToken>`     |
 
 **URL Params:**
 
@@ -749,23 +728,35 @@ Mengambil log/riwayat AI (Pomodoro Logs) berdasarkan session ID.
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": "uuid",
-      "deviceId": "uuid",
-      "sessionId": "uuid",
-      "currentCycle": 1,
-      "pomodoroMode": "fokus",
-      "timePhase": "awal",
-      "triggerContext": "Konteks trigger (sensor anomali / fase waktu)",
-      "aiResponse": "Respons AI dari Rin-chan",
-      "emotion": "COLD",
-      "temperatureAtTime": 27.5,
-      "lightAtTime": 300.2,
-      "noiseAtTime": 40.1,
-      "createdAt": "2026-04-12T17:42:11.000Z"
-    }
-  ]
+  "data": {
+    "logs": [
+      {
+        "id": "uuid",
+        "sessionId": "uuid",
+        "logType": "phase_alert",
+        "currentCycle": 1,
+        "pomodoroMode": "fokus",
+        "triggerContext": "Fase Awal Fokus",
+        "aiResponse": "Respons AI dari Rin-chan",
+        "emotion": "IDLE",
+        "createdAt": "2026-04-12T17:42:11.000Z"
+      }
+    ],
+    "sensorEvents": [
+      {
+        "id": "uuid",
+        "sessionId": "uuid",
+        "eventType": "interupsi",
+        "triggerContext": "Interupsi: Suara Bising",
+        "aiResponse": "Tolong kecilkan suaranya...",
+        "emotion": "NOISY",
+        "temperatureAtTime": 27.5,
+        "lightAtTime": 300.2,
+        "noiseAtTime": 75.5,
+        "createdAt": "2026-04-12T17:45:11.000Z"
+      }
+    ]
+  }
 }
 ```
 
@@ -775,7 +766,11 @@ Mengambil log/riwayat AI (Pomodoro Logs) berdasarkan session ID.
 
 Menghapus sesi Pomodoro beserta log-nya berdasarkan session ID.
 
-**Headers:** Tidak ada middleware autentikasi pada endpoint ini
+**Headers:**
+
+| Header          | Nilai                      |
+| --------------- | -------------------------- |
+| `Authorization` | `Bearer <accessToken>`     |
 
 **URL Params:**
 
@@ -794,7 +789,7 @@ Menghapus sesi Pomodoro beserta log-nya berdasarkan session ID.
 
 ---
 
-## 6. WebSocket
+## 5. WebSocket
 
 ### GET /api/ws/iot
 
@@ -887,7 +882,7 @@ setInterval(() => {
 
 ---
 
-## 7. Health Check
+## 6. Health Check
 
 ### GET /api/health
 

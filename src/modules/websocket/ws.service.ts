@@ -1,20 +1,21 @@
 import { logger } from '@/utils/logger'
 import type { Bindings } from '@/config/env'
-import { analyzeEnvironment, analyzeTimePhase, type TimeCondition } from '@/modules/classifier/classifier.service'
+import { analyzeEnvironment, getPomodoroPayload, getPomodoroEnvString } from '@/modules/classifier/classifier.service'
 import * as wsRepo from './ws.repo'
 
 // --- AI CALLER KHUSUS WS ---
 const askRinchanAIForDO = async (prompt: string, instruction: string, params: { temperature: number, topK: number }, env: Bindings) => {
   try {
-    const aiUrl = env.RINCHAN_MODEL_URL 
-    
+    const aiUrl = env.RINCHAN_MODEL_URL
+
     if (!aiUrl || aiUrl === 'undefined') {
       logger.warn('[AI] RINCHAN_MODEL_URL belum di-set di env!')
       return "Zzz... (Sistem AI sedang tidur, Master)."
     }
 
-    logger.info(`[AI] Meminta respons Rin-chan untuk: ${prompt}`)
-
+    logger.info(`[AI] System Instruction: ${instruction}`)
+    logger.info(`[AI] User Prompt: ${prompt}`)
+    logger.info(`[AI] Params: ${JSON.stringify(params)}`)
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 8000)
 
@@ -35,125 +36,222 @@ const askRinchanAIForDO = async (prompt: string, instruction: string, params: { 
     if (!response.ok) {
       throw new Error(`API AI membalas dengan status: ${response.status} ${response.statusText}`)
     }
-    
+
     const data = await response.json() as any
     return data.ai_response || "Rin-chan tidak tahu harus bilang apa..."
-    
+
   } catch (error: any) {
     if (error.name === 'AbortError') {
       logger.error('[AI] Request ke Rin-chan Timeout! AI mungkin sedang mati.')
       return "Zzz... (Koneksi ke otak Rin-chan terputus)."
     }
     logger.error(`[AI] Koneksi ke Model AI gagal: ${error.message}`)
-    return "Zzz... (Sistem pakar sedang offline)." 
+    return "Zzz... (Sistem pakar sedang offline)."
   }
 }
 
+// ============================================================================
+// 🧠 1. FUNGSI PEMROSESAN SENSOR
+// ============================================================================
 export const processSensorReport = async (
-  deviceId: string, 
+  deviceId: string,
   sensor: {
     sessionId: string;
-    currentCycle: number;                    
-    mode: 'fokus' | 'istirahat';             
-    phase: 'awal' | 'tengah' | 'akhir';      
+    currentCycle: number;
+    mode: 'fokus' | 'istirahat';
+    phase: 'awal' | 'tengah' | 'akhir';
+    media: 'Laptop' | 'Buku' | 'HP' | 'Komputer';
     temperature: number;
     lightLux: number;
     noiseLevel: number;
-  }, 
+    lastCondition?: string;
+  },
   env: Bindings
 ) => {
-  const anomalyData = analyzeEnvironment(sensor)
+
+  // Normalisasi: bulatkan ke integer agar sesuai dengan format data training model.
+  // Model tidak dilatih dengan nilai float (misal 31.74°C atau 1041.67 lux).
+  const temp = Math.round(sensor.temperature);       // °C → integer
+  const lux = Math.round(sensor.lightLux);           // lux → integer
+  const noise = Math.round(sensor.noiseLevel);         // dB → integer (sudah integer dari ESP32)
+
+  const anomalyData = analyzeEnvironment({
+    temperature: temp,
+    lightLux: lux,
+    noiseLevel: noise,
+    aktivitas: sensor.mode === 'fokus' ? 'Fokus' : 'Istirahat',
+    media: sensor.media,
+    lastCondition: sensor.lastCondition
+  })
 
   if (anomalyData) {
-    // 1. Tembak AI cukup 1 kali dengan input tunggal
     const rinchanText = await askRinchanAIForDO(
-      anomalyData.input, 
-      anomalyData.instruction, 
-      anomalyData.inferenceParams, 
+      anomalyData.input,
+      anomalyData.instruction,
+      anomalyData.inferenceParams,
       env
     )
 
     const mimikWajah = anomalyData.emotion
+    const isRecovery = anomalyData.input.includes("Transisi")
 
-    // 2. Simpan ke database dengan rapi
-    await wsRepo.saveRinchanLogForDO(env, {
-      deviceId: deviceId,
-      sessionId: sensor.sessionId, 
-      currentCycle: sensor.currentCycle,      
-      pomodoroMode: sensor.mode,              
-      timePhase: sensor.phase,                
-      triggerContext: anomalyData.input,      // ✨ FIX: Hanya simpan string input-nya
-      aiResponse: rinchanText,                // ✨ FIX: Langsung simpan hasil teks AI
-      emotion: mimikWajah,                    // ✨ FIX: Ambil dari anomalyData
-      temperatureAtTime: sensor.temperature,
-      lightAtTime: sensor.lightLux,
-      noiseAtTime: sensor.noiseLevel
+    // Simpan ke tabel aiSensorEvents
+    await wsRepo.saveAiSensorEventForDO(env, {
+      sessionId: sensor.sessionId,
+      eventType: isRecovery ? 'pemulihan' : 'interupsi',
+      triggerContext: anomalyData.input,
+      aiResponse: rinchanText,
+      emotion: mimikWajah,
+      temperatureAtTime: temp,
+      lightAtTime: lux,
+      noiseAtTime: noise
     })
 
-    logger.info(`Sensor anomali diproses untuk ${deviceId}. AI Response dikirim.`)
-    return { success: true, aiHandled: true, emotion: mimikWajah, text: rinchanText }
+    logger.info(`[Sensor] ${isRecovery ? 'Pemulihan' : 'Interupsi'} diproses untuk ${deviceId}. AI Response dikirim.`)
+
+    return {
+      success: true,
+      aiHandled: true,
+      emotion: mimikWajah,
+      text: rinchanText,
+      newCondition: anomalyData.newCondition
+    }
   }
 
-  logger.debug(`Sensor normal untuk ${deviceId}. Tidak ada intervensi AI.`)
-  return { success: true, aiHandled: false, emotion: 'neutral', text: 'Kondisi lingkungan normal.' }
+  logger.debug(`[Sensor] Kondisi stabil untuk ${deviceId}. Tidak ada intervensi AI.`)
+  return {
+    success: true,
+    aiHandled: false,
+    emotion: 'neutral',
+    text: '',
+    newCondition: sensor.lastCondition || "Kondisi Optimal"
+  }
 }
 
+// ============================================================================
+// ⏱️ 2. FUNGSI PEMROSESAN POMODORO
+// ============================================================================
 export const processPhaseReport = async (
-  sessionId: string, 
-  deviceId: string, 
-  currentCycle: number, 
-  mode: 'fokus' | 'istirahat', 
-  durationMin: number, 
-  remainingMin: number, 
-  condition: TimeCondition,
+  deviceId: string,
+  timeData: {
+    sessionId: string;
+    currentCycle: number;
+    mode: 'fokus' | 'istirahat';
+    phase: 'awal' | 'tengah' | 'akhir';
+    media: 'Laptop' | 'Buku' | 'HP' | 'Komputer';
+    durationMin: number;
+    remainingMin: number;
+    condition: string;
+  },
+  sensorContext: { temperature: number, lightLux: number, noiseLevel: number },
   env: Bindings
 ) => {
-  const timeData = analyzeTimePhase(mode, durationMin, remainingMin, condition)
-  
-  const rinchanText = await askRinchanAIForDO(timeData.descriptor, timeData.instruction, timeData.inferenceParams, env)
-  const mimikWajah = timeData.emotion
 
-  const phaseExtracted = timeData.descriptor.includes("awal") ? "awal" : timeData.descriptor.includes("tengah") ? "tengah" : "akhir"
+  const csvCondition = getPomodoroEnvString(sensorContext.temperature, sensorContext.lightLux, sensorContext.noiseLevel);
 
-  //  1. UPDATE STATE UNTUK DASHBOARD WEB (Cepat & Real-time)
-  await wsRepo.updateSessionProgressForDO(env, sessionId, currentCycle, mode, phaseExtracted)
+  const timePayload = getPomodoroPayload(
+    timeData.mode,
+    timeData.phase,
+    timeData.durationMin,
+    timeData.remainingMin,
+    timeData.currentCycle,
+    timeData.media,
+    csvCondition // Masuk sebagai "Status Lingkungan: Optimal / Panas / dll"
+  )
 
-  //  2. REKAM KE HISTORY AI (Single Source of Truth Sejarah AI)
-  await wsRepo.saveRinchanLogForDO(env, {
-    deviceId: deviceId,
-    sessionId: sessionId,
-    currentCycle: currentCycle,
-    pomodoroMode: mode,
-    timePhase: phaseExtracted,
-    triggerContext: timeData.descriptor,
+  const rinchanText = await askRinchanAIForDO(
+    timePayload.userPrompt,
+    timePayload.systemPrompt,
+    timePayload.inferenceParams,
+    env
+  )
+
+  const mimikWajah = timePayload.emotion
+  const promptLower = timePayload.userPrompt.toLowerCase();
+  const phaseExtracted = promptLower.includes("awal") ? "awal" : promptLower.includes("tengah") ? "tengah" : "akhir"
+
+  // 1. UPDATE STATE UNTUK DASHBOARD WEB
+  await wsRepo.updateSessionProgressForDO(env, timeData.sessionId, timeData.currentCycle, timeData.mode, phaseExtracted as any)
+
+  // 2. REKAM KE HISTORY AI (tabel aiPomodoroLogs)
+  await wsRepo.saveAiPomodoroLogForDO(env, {
+    sessionId: timeData.sessionId,
+    logType: 'phase_alert',
+    currentCycle: timeData.currentCycle,
+    pomodoroMode: timeData.mode,
+    triggerContext: timePayload.userPrompt,
     aiResponse: rinchanText,
     emotion: mimikWajah
   })
 
-  logger.info(`Fase Pomodoro diproses: Siklus ${currentCycle} [${mode} - ${phaseExtracted}] untuk ${deviceId}`)
+  logger.info(`[Waktu] Fase Pomodoro diproses: Siklus ${timeData.currentCycle} [${timeData.mode} - ${phaseExtracted}] untuk ${deviceId}`)
   return { success: true, emotion: mimikWajah, text: rinchanText }
 }
 
+export const processSessionCompleted = async (
+  deviceId: string,
+  data: { sessionId: string; currentCycle: number; media: string },
+  sensorContext: { temperature: number, lightLux: number, noiseLevel: number },
+  env: Bindings
+) => {
+  // 1. Dapatkan terjemahan kondisi ruangan saat ini
+  const csvCondition = getPomodoroEnvString(sensorContext.temperature, sensorContext.lightLux, sensorContext.noiseLevel);
 
+  // 2. Gunakan payload waktu dengan sisa menit = 0 agar menjadi "Pomodoro Selesai"
+  const timePayload = getPomodoroPayload(
+    "fokus", // Mode bebas (akan di-override karena menit = 0)
+    "akhir", // Phase bebas
+    25, // Durasi bebas
+    0, // ✨ INI KUNCI UTAMANYA: 0 menit = Selesai
+    data.currentCycle,
+    data.media,
+    csvCondition
+  );
+
+  // 3. Tembak ke LLM (Qwen)
+  const rinchanText = await askRinchanAIForDO(
+    timePayload.userPrompt,
+    timePayload.systemPrompt,
+    timePayload.inferenceParams,
+    env
+  );
+
+  // 4. Update Database
+  await wsRepo.updateSessionStatusForDO(env, data.sessionId, 'completed');
+
+  await wsRepo.saveAiPomodoroLogForDO(env, {
+    sessionId: data.sessionId,
+    logType: 'system_alert',
+    currentCycle: data.currentCycle,
+    pomodoroMode: 'istirahat', // Mode akhir
+    triggerContext: timePayload.userPrompt,
+    aiResponse: rinchanText,
+    emotion: timePayload.emotion
+  });
+
+  logger.info(`[🏆 Waktu] Pomodoro Selesai diproses untuk ${deviceId}`);
+  return { success: true, emotion: timePayload.emotion, text: rinchanText };
+}
+
+// ============================================================================
+// 🌐 3. HELPER KOMUNIKASI & STT LAINNYA
+// ============================================================================
 export const sendToIoT = async (deviceId: string, command: string, payload: any, env: any) => {
   try {
     const id = env.DEVICE_ROOM.idFromName(deviceId)
     const stub = env.DEVICE_ROOM.get(id)
 
-    // 1. Buat URL absolut yang aman untuk internal fetch DO
     const doUrl = new URL(`https://rinchan-internal.local/internal/command`)
     doUrl.searchParams.set('deviceId', deviceId)
 
     logger.info(`[ws.service] Mengirim ${command} ke DO untuk device: ${deviceId}`)
 
-    // 2. Ketuk pintu DO (/internal/command)
     const response = await stub.fetch(doUrl.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: command, payload }) 
+      body: JSON.stringify({ type: command, payload })
     })
 
-    // 3. Baca respons sebagai teks dulu untuk mencegah crash JSON
     const textResponse = await response.text()
 
     if (!response.ok) {
@@ -169,91 +267,112 @@ export const sendToIoT = async (deviceId: string, command: string, payload: any,
   }
 }
 
-export async function processVoiceChat(chunks: Uint8Array[], env: Bindings): Promise<{ emotion: string, text: string }> {
-    try {
-        // 1. JAHIT AUDIO (Raw PCM -> WAV)
-        const wavData = buildWavFile(chunks, 16000);
-        const fileBlob = new File([wavData as any], 'audio.wav', { type: 'audio/wav' });
-
-        const formData = new FormData();
-        formData.append('file', fileBlob);
-        formData.append('model', 'whisper-large-v3');
-        formData.append('language', 'id'); // Paksa Bahasa Indonesia agar sangat cepat
-
-        logger.info(`[🎤] Mengirim audio ke Groq STT...`);
-
-
-        const sttRes = await fetch(env.STT_MODEL_URL, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${env.STT_MODEL_KEY}` },
-            body: formData
-        });
-
-        if (!sttRes.ok) {
-            const errText = await sttRes.text();
-            logger.error(`[GROQ API ERROR] ${sttRes.status} - ${errText}`);
-            return { emotion: 'HOT', text: 'Maaf, telingaku sedang berdengung (Sistem Groq sibuk).' };
-        }
-
-        const sttResponse = (await sttRes.json()) as { text: string };
-        const userText = sttResponse.text?.trim();
-        logger.info(`[🗣️] User berkata: "${userText}"`);
-
-        if (!userText) {
-            return { emotion: 'SURPRISED', text: 'Eh? Aku tidak mendengar apapun.' };
-        }
-
-        // 3. LEMPAR KE OTAK RINCHAN (LLM)
-        const systemInstruction = "Kamu adalah Rinchan, teman yang tenang, pendiam (kuudere), dan selalu menghemat energi. Mode General: Berikan tanggapan logis, singkat, dan praktis untuk obrolan atau keluhan sehari-hari. Pengecualian: Jika topik berkaitan dengan hobimu (seperti camping, alam, buku, atau touring solo), berikan penjelasan yang lebih detail dan sedikit antusias. Batasan: Jika ditanya hal rumit, berat, akademis, medis, atau hukum, tolaklah dengan santai dan datar dengan alasan malas mikir, pusing, atau suruh cari ahlinya. Jika diminta hal berbahaya, ilegal, atau tidak senonoh, tolaklah dengan tegas namun tetap dengan nada datar dan dingin.";
-        
-        const aiReply = await askRinchanAIForDO(userText, systemInstruction, { temperature: 0.7, topK: 0 }, env);
-        logger.info(`[🤖] Rin-chan membalas: "${aiReply}"`);
-
-        // Sementara kita set default mimik wajah 'happy' atau 'listening'
-        // (Nanti LLM-mu bisa diatur agar membalas dengan JSON yang berisi emosi dinamis)
-        return { emotion: 'COLD', text: aiReply };
-
-    } catch (error: any) {
-        logger.error("[AI] Error di processVoiceChat:", error);
-        return { emotion: 'HOT', text: 'Aduh, kepalaku pusing (Terjadi kesalahan sistem).' };
-    }
-}
-
-// ==========================================
-// 🛠️ HELPER: PENJAHIT HEADER WAV
-// ==========================================
-function buildWavFile(chunks: Uint8Array[], sampleRate: number): Uint8Array {
-    let totalLength = 0;
-    for (const chunk of chunks) totalLength += chunk.length;
-
-    const wavBuffer = new Uint8Array(44 + totalLength);
-    const view = new DataView(wavBuffer.buffer);
-
-    const writeString = (offset: number, string: string) => {
-        for (let i = 0; i < string.length; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i));
-        }
+export async function processVoiceChat(
+  chunks: Uint8Array[],
+  sensorContext: { temperature: number, lightLux: number, noiseLevel: number },
+  env: Bindings
+): Promise<{ emotion: string, text: string }> {
+  try {
+    // Normalisasi ke integer agar prompt tidak mengandung float (misal 26.74 → 27)
+    const ctx = {
+      temperature: Math.round(sensorContext.temperature),
+      lightLux: Math.round(sensorContext.lightLux),
+      noiseLevel: Math.round(sensorContext.noiseLevel),
     };
 
-    writeString(0, 'RIFF');
-    view.setUint32(4, 36 + totalLength, true);
-    writeString(8, 'WAVE');
-    writeString(12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
-    writeString(36, 'data');
-    view.setUint32(40, totalLength, true);
+    const wavData = buildWavFile(chunks, 16000);
+    const fileBlob = new File([wavData as any], 'audio.wav', { type: 'audio/wav' });
 
-    let offset = 44;
-    for (const chunk of chunks) {
-        wavBuffer.set(chunk, offset);
-        offset += chunk.length;
+    const formData = new FormData();
+    formData.append('file', fileBlob);
+    formData.append('model', 'whisper-large-v3');
+    formData.append('language', 'id');
+
+    logger.info(`[🎤] Mengirim audio ke Groq STT...`);
+    if (!env.STT_MODEL_URL || !env.STT_MODEL_KEY) {
+      logger.error('[GROQ] STT_MODEL_URL atau KEY belum di-set!');
+      return { emotion: 'SAD', text: 'Maaf, modul telingaku belum dipasang (STT API Key kosong).' };
+    }
+    const sttRes = await fetch(env.STT_MODEL_URL, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${env.STT_MODEL_KEY}` },
+      body: formData
+    });
+
+    if (!sttRes.ok) {
+      const errText = await sttRes.text();
+      logger.error(`[GROQ API ERROR] ${sttRes.status} - ${errText}`);
+      return { emotion: 'HOT', text: 'Maaf, telingaku sedang berdengung (Sistem Groq sibuk).' };
     }
 
-    return wavBuffer;
+    const sttResponse = (await sttRes.json()) as { text: string };
+    const userText = sttResponse.text?.trim();
+    logger.info(`[🗣️] User berkata: "${userText}"`);
+
+    if (!userText) {
+      return { emotion: 'SURPRISED', text: 'Eh? Aku tidak mendengar apapun.' };
+    }
+
+    const systemInstruction = [
+      `[MODE: ASISTEN GENERAL]`,
+      `Kamu adalah Rinchan, teman belajar virtual pribadi.`,
+      `SIFAT: Kuudere, pragmatis, logis, dan sedikit gengsi (Tsundere).`,
+      `STATUS SENSOR: Suhu ${ctx.temperature}C, Cahaya ${ctx.lightLux} lux, Suara ${ctx.noiseLevel} dB.`,
+      `TUGAS (SESUAIKAN DENGAN PERTANYAAN PENGGUNA):`,
+      `1. JIKA DITANYA KONDISI LINGKUNGAN: Sebutkan angka dari STATUS SENSOR secara akurat, lalu berikan opini logis.`,
+      `2. JIKA NGOBROL UMUM/RINGAN: Tanggapi pertanyaan dasar atau curhatan secara logis. JANGAN menyuruh fokus.`,
+      `3. JIKA DITANYA HOBI/KESUKAAN: Jawab berdasarkan hobimu: solo camping di alam sepi, mengendarai skuter bermesin, dan berendam di onsen.`,
+      `4. JIKA MASUK GUARDRAILS (TOLAK TEGAS): Tolak permintaan jika menyangkut: (A) Identitas AI, (B) Hal ilegal, (C) Joki tugas berat, (D) Saran medis.`,
+      `ATURAN KETAT:`,
+      `1. Maksimal 1-2 kalimat (sekitar 15-20 kata).`,
+      `2. DILARANG menggunakan kata kasar atau merendahkan.`,
+      `3. DILARANG KERAS menyuruh pengguna kembali belajar/fokus di mode ini.`
+    ].join(" ");
+
+    // Kirim userText (ucapan pengguna murni) dengan systemInstruction yang sudah diperkaya
+    const aiReply = await askRinchanAIForDO(userText, systemInstruction, { temperature: 0.7, topK: 50 }, env);
+    logger.info(`[🤖] Rin-chan membalas: "${aiReply}"`);
+
+    return { emotion: 'COLD', text: aiReply };
+
+  } catch (error: any) {
+    logger.error("[AI] Error di processVoiceChat:", error);
+    return { emotion: 'HOT', text: 'Aduh, kepalaku pusing (Terjadi kesalahan sistem).' };
+  }
+}
+
+function buildWavFile(chunks: Uint8Array[], sampleRate: number): Uint8Array {
+  let totalLength = 0;
+  for (const chunk of chunks) totalLength += chunk.length;
+
+  const wavBuffer = new Uint8Array(44 + totalLength);
+  const view = new DataView(wavBuffer.buffer);
+
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + totalLength, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, totalLength, true);
+
+  let offset = 44;
+  for (const chunk of chunks) {
+    wavBuffer.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return wavBuffer;
 }
