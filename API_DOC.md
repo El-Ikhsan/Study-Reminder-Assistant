@@ -783,7 +783,7 @@ Mengambil riwayat log AI (`aiPomodoroLogs`) dan anomali sensor (`aiSensorEvents`
 {
   "success": true,
   "data": {
-    "logs": [
+    "pomodoroLogs": [
       {
         "id": "uuid",
         "sessionId": "uuid",
@@ -796,7 +796,7 @@ Mengambil riwayat log AI (`aiPomodoroLogs`) dan anomali sensor (`aiSensorEvents`
         "createdAt": "2026-04-12T17:42:11.000Z"
       }
     ],
-    "sensorEvents": [
+    "sensorLogs": [
       {
         "id": "uuid",
         "sessionId": "uuid",
