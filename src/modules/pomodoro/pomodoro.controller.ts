@@ -1,37 +1,25 @@
 import { Context } from 'hono'
 import { ResponseError } from '@/utils/responseError'
 import { startSession, stopSession, getPomodoroHistoryById, deletePomodoroById, getAllPomodoroSessions } from './pomodoro.service'
-import { logger } from '@/utils/logger'
 import { validateBody, validateParam } from '@/utils/validation'
-import { startPomodoroSchema, pomodoroIdParamSchema } from './pomodoro.validation'
+import { startPomodoroSchema, pomodoroIdParamSchema, stopPomodoroSchema } from './pomodoro.validation'
 
 export const startPomodoro = async (c: Context) => {
-  try {
-    const body = await validateBody(c, startPomodoroSchema)
-    const { deviceId, recipe } = body
+  const body = await validateBody(c, startPomodoroSchema)
+  const { deviceId, recipe } = body
 
-    // Lempar ke Service (Di dalam startSession ini UUID akan di-generate)
-    const result = await startSession(deviceId, recipe, c.env)
+  // Lempar ke Service (Di dalam startSession ini UUID akan di-generate)
+  const result = await startSession(deviceId, recipe, c.env)
 
-    return c.json({
-      success: true,
-      message: result.message,
-      sessionId: result.sessionId // Mengembalikan ID yang baru dibuat ke frontend
-    })
-
-  } catch (error: any) {
-    logger.error("Error di startPomodoro controller:", error)
-    return c.json({ 
-      success: false, 
-      message: error.message || "Terjadi kesalahan internal" 
-    }, 500)
-  }
+  return c.json({
+    success: true,
+    message: result.message,
+    sessionId: result.sessionId, // Mengembalikan ID yang baru dibuat ke frontend
+  })
 }
 
 export const stopPomodoro = async (c: Context) => {
-  const body = await c.req.json()
-  if (!body.sessionId || !body.deviceId) throw new ResponseError(400, "Session ID dan Device ID wajib diisi")
-
+  const body = await validateBody(c, stopPomodoroSchema)
   const result = await stopSession(body.sessionId, body.deviceId, c.env)
   return c.json(result, 200)
 }

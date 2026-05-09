@@ -9,7 +9,7 @@
 - Semua endpoint yang butuh autentikasi harus mengirimkan **salah satu** dari:
   - Header `Authorization: Bearer <accessToken>`
   - Cookie `authToken=<accessToken>`
-- Format waktu: Unix Timestamp (integer seconds) yang dikembalikan sebagai ISO string oleh Drizzle ORM
+- Format waktu: Timestamp disimpan sebagai Unix timestamp (detik) di SQLite, namun saat dikirim sebagai JSON biasanya terserialisasi menjadi string ISO (karena Drizzle mengembalikan `Date`).
 - Error response selalu mengikuti format:
   ```json
   {
@@ -38,11 +38,11 @@ Mendaftarkan user baru.
 }
 ```
 
-| Field      | Tipe     | Wajib | Validasi                         |
-| ---------- | -------- | ----- | -------------------------------- |
-| `name`     | `string` | ✅    | Min 2, Max 60 karakter           |
-| `email`    | `string` | ✅    | Max 70 karakter, format email    |
-| `password` | `string` | ✅    | Min 8, Max 255 karakter          |
+| Field      | Tipe     | Wajib | Validasi                      |
+| ---------- | -------- | ----- | ----------------------------- |
+| `name`     | `string` | ✅    | Min 2, Max 60 karakter        |
+| `email`    | `string` | ✅    | Max 70 karakter, format email |
+| `password` | `string` | ✅    | Min 8, Max 255 karakter       |
 
 **Response `201 Created`:**
 
@@ -79,10 +79,10 @@ Login dan mendapatkan access + refresh token.
 }
 ```
 
-| Field      | Tipe     | Wajib | Validasi                         |
-| ---------- | -------- | ----- | -------------------------------- |
-| `email`    | `string` | ✅    | Max 70 karakter, format email    |
-| `password` | `string` | ✅    | Min 8, Max 255 karakter          |
+| Field      | Tipe     | Wajib | Validasi                      |
+| ---------- | -------- | ----- | ----------------------------- |
+| `email`    | `string` | ✅    | Max 70 karakter, format email |
+| `password` | `string` | ✅    | Min 8, Max 255 karakter       |
 
 **Response `200 OK`:**
 
@@ -114,9 +114,9 @@ Memperbarui access token menggunakan refresh token.
 
 **Headers:**
 
-| Header            | Nilai                      | Keterangan                                  |
-| ----------------- | -------------------------- | ------------------------------------------- |
-| `X-Refresh-Token` | `<refreshToken>`           | Refresh token dari login                    |
+| Header            | Nilai            | Keterangan               |
+| ----------------- | ---------------- | ------------------------ |
+| `X-Refresh-Token` | `<refreshToken>` | Refresh token dari login |
 
 > Alternatif: Bisa juga dikirim lewat Cookie `refreshToken=<refreshToken>`
 
@@ -142,9 +142,9 @@ Logout dan menghapus semua refresh token milik user.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **Request Body:** Tidak ada
 
@@ -167,9 +167,9 @@ Mengambil data profil user yang sedang login.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **Response `200 OK`:**
 
@@ -196,10 +196,10 @@ Memperbarui data profil user (nama, email, dan/atau password).
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
-| `Content-Type`  | `application/json`         |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
+| `Content-Type`  | `application/json`     |
 
 **Request Body (JSON):**
 
@@ -247,16 +247,16 @@ Mengunggah atau mengganti avatar user.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
-| `Content-Type`  | `multipart/form-data`      |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
+| `Content-Type`  | `multipart/form-data`  |
 
 **Request Body (FormData):**
 
-| Field    | Tipe   | Wajib | Keterangan                                  |
-| -------- | ------ | ----- | ------------------------------------------- |
-| `avatar` | `File` | ✅    | File gambar (harus bertipe `image/*`)        |
+| Field    | Tipe   | Wajib | Keterangan                            |
+| -------- | ------ | ----- | ------------------------------------- |
+| `avatar` | `File` | ✅    | File gambar (harus bertipe `image/*`) |
 
 **Response `200 OK`:**
 
@@ -278,9 +278,9 @@ Menghapus avatar user dari R2 storage dan mengembalikan `avatarUrl` ke `null`.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **Request Body:** Tidak ada
 
@@ -303,9 +303,9 @@ Mengambil semua perangkat milik user yang sedang login.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **Response `200 OK`:**
 
@@ -335,10 +335,10 @@ Mengklaim perangkat IoT agar terhubung ke akun user.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
-| `Content-Type`  | `application/json`         |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
+| `Content-Type`  | `application/json`     |
 
 **Request Body (JSON):**
 
@@ -349,10 +349,10 @@ Mengklaim perangkat IoT agar terhubung ke akun user.
 }
 ```
 
-| Field         | Tipe     | Wajib | Validasi                       |
-| ------------- | -------- | ----- | ------------------------------ |
-| `deviceIotId` | `string` | ✅    | Tepat 10 karakter              |
-| `deviceName`  | `string` | ✅    | Min 3, Max 20 karakter         |
+| Field         | Tipe     | Wajib | Validasi               |
+| ------------- | -------- | ----- | ---------------------- |
+| `deviceIotId` | `string` | ✅    | Tepat 10 karakter      |
+| `deviceName`  | `string` | ✅    | Min 3, Max 20 karakter |
 
 **Response `201 Created`:**
 
@@ -383,14 +383,14 @@ Memperbarui token version perangkat (menaikkan versi +1, meng-invalidasi API key
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **URL Params:**
 
-| Param | Tipe     | Keterangan             |
-| ----- | -------- | ---------------------- |
+| Param | Tipe     | Keterangan               |
+| ----- | -------- | ------------------------ |
 | `id`  | `string` | UUID perangkat (36 char) |
 
 **Request Body:** Tidak ada
@@ -407,6 +407,25 @@ Memperbarui token version perangkat (menaikkan versi +1, meng-invalidasi API key
 }
 ```
 
+**Error Response (sesuai implementasi saat ini):**
+
+| Status | Kondisi                                    |
+| ------ | ------------------------------------------ |
+| `401`  | Tidak ada/invalid access token             |
+| `400`  | Param `id` tidak valid (harus 36 karakter) |
+| `403`  | Akses ditolak (device bukan milik user)    |
+| `404`  | Perangkat tidak ditemukan                  |
+| `500`  | Error internal                             |
+
+Format body:
+
+```json
+{
+  "success": false,
+  "message": "<pesan error>"
+}
+```
+
 ---
 
 ### DELETE /api/device/:deviceId
@@ -415,14 +434,14 @@ Menghapus perangkat beserta semua sesi Pomodoro yang terkait.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **URL Params:**
 
-| Param      | Tipe     | Validasi               |
-| ---------- | -------- | ---------------------- |
+| Param      | Tipe     | Validasi                 |
+| ---------- | -------- | ------------------------ |
 | `deviceId` | `string` | Tepat 36 karakter (UUID) |
 
 **Request Body:** Tidak ada
@@ -444,10 +463,10 @@ Mengubah kecerahan layar (brightness) perangkat IoT secara real-time melalui Web
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
-| `Content-Type`  | `application/json`         |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
+| `Content-Type`  | `application/json`     |
 
 **Request Body (JSON):**
 
@@ -458,10 +477,10 @@ Mengubah kecerahan layar (brightness) perangkat IoT secara real-time melalui Web
 }
 ```
 
-| Field      | Tipe     | Wajib | Validasi                                    |
-| ---------- | -------- | ----- | ------------------------------------------- |
-| `deviceId` | `string` | ✅    | Tepat 36 karakter (UUID)                     |
-| `value`    | `number` | ✅    | Integer, min 0, max 100 (persentase)         |
+| Field      | Tipe     | Wajib | Validasi                             |
+| ---------- | -------- | ----- | ------------------------------------ |
+| `deviceId` | `string` | ✅    | Tepat 36 karakter (UUID)             |
+| `value`    | `number` | ✅    | Integer, min 0, max 100 (persentase) |
 
 **Response `200 OK`:**
 
@@ -489,10 +508,10 @@ Mengubah volume audio perangkat IoT secara real-time melalui WebSocket.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
-| `Content-Type`  | `application/json`         |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
+| `Content-Type`  | `application/json`     |
 
 **Request Body (JSON):**
 
@@ -503,10 +522,10 @@ Mengubah volume audio perangkat IoT secara real-time melalui WebSocket.
 }
 ```
 
-| Field      | Tipe     | Wajib | Validasi                                    |
-| ---------- | -------- | ----- | ------------------------------------------- |
-| `deviceId` | `string` | ✅    | Tepat 36 karakter (UUID)                     |
-| `value`    | `number` | ✅    | Integer, min 0, max 100 (persentase)         |
+| Field      | Tipe     | Wajib | Validasi                             |
+| ---------- | -------- | ----- | ------------------------------------ |
+| `deviceId` | `string` | ✅    | Tepat 36 karakter (UUID)             |
+| `value`    | `number` | ✅    | Integer, min 0, max 100 (persentase) |
 
 **Response `200 OK`:**
 
@@ -537,9 +556,9 @@ Digunakan perangkat untuk melakukan polling status klaim dan mendapatkan API key
 
 **URL Params:**
 
-| Param         | Tipe     | Validasi               |
-| ------------- | -------- | ---------------------- |
-| `deviceIotId` | `string` | Tepat 10 karakter      |
+| Param         | Tipe     | Validasi          |
+| ------------- | -------- | ----------------- |
+| `deviceIotId` | `string` | Tepat 10 karakter |
 
 **Response `200 OK` — Belum diklaim:**
 
@@ -581,7 +600,6 @@ Digunakan perangkat untuk melakukan polling status klaim dan mendapatkan API key
 
 ---
 
-
 ## 4. Pomodoro
 
 ### POST /api/pomodoro/start
@@ -590,9 +608,9 @@ Memulai sesi Pomodoro baru dan mengirim perintah ke perangkat IoT via Durable Ob
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **Request Body (JSON):**
 
@@ -612,17 +630,17 @@ Memulai sesi Pomodoro baru dan mengirim perintah ke perangkat IoT via Durable Ob
 }
 ```
 
-| Field                     | Tipe     | Wajib | Validasi / Keterangan                                        |
-| ------------------------- | -------- | ----- | ------------------------------------------------------------ |
-| `deviceId`                | `string` | ✅    | Tepat 36 karakter (UUID)                                      |
-| `recipe.focusDuration`    | `number` | ✅    | Integer positif (menit)                                       |
-| `recipe.breakDuration`    | `number` | ✅    | Integer positif (menit)                                       |
-| `recipe.cycles`           | `number` | ✅    | Integer positif                                               |
-| `recipe.media`            | `string` | ❌    | `"Buku"` \| `"Laptop"` \| `"HP"` \| `"Komputer"`. Default: `"Laptop"` |
-| `recipe.currentCycle`     | `number` | ❌    | Integer positif. Default: `1`                                  |
-| `recipe.currentMode`      | `string` | ❌    | `"fokus"` \| `"istirahat"`. Default: `"fokus"`                 |
-| `recipe.currentPhase`     | `string` | ❌    | `"awal"` \| `"tengah"` \| `"akhir"`. Default: `"awal"`        |
-| `recipe.status`           | `string` | ❌    | `"running"` \| `"paused"` \| `"completed"` \| `"cancelled"`. Default: `"running"` |
+| Field                  | Tipe     | Wajib | Validasi / Keterangan                                                             |
+| ---------------------- | -------- | ----- | --------------------------------------------------------------------------------- |
+| `deviceId`             | `string` | ✅    | Tepat 36 karakter (UUID)                                                          |
+| `recipe.focusDuration` | `number` | ✅    | Integer positif (menit)                                                           |
+| `recipe.breakDuration` | `number` | ✅    | Integer positif (menit)                                                           |
+| `recipe.cycles`        | `number` | ✅    | Integer positif                                                                   |
+| `recipe.media`         | `string` | ✅    | `"Buku"` \| `"Laptop"` \| `"HP"` \| `"Komputer"`                                  |
+| `recipe.currentCycle`  | `number` | ❌    | Integer positif. Default: `1`                                                     |
+| `recipe.currentMode`   | `string` | ❌    | `"fokus"` \| `"istirahat"`. Default: `"fokus"`                                    |
+| `recipe.currentPhase`  | `string` | ❌    | `"awal"` \| `"tengah"` \| `"akhir"`. Default: `"awal"`                            |
+| `recipe.status`        | `string` | ❌    | `"running"` \| `"paused"` \| `"completed"` \| `"cancelled"`. Default: `"running"` |
 
 **Response `200 OK`:**
 
@@ -634,6 +652,24 @@ Memulai sesi Pomodoro baru dan mengirim perintah ke perangkat IoT via Durable Ob
 }
 ```
 
+**Error Response (sesuai implementasi saat ini):**
+
+| Status | Kondisi                                                          |
+| ------ | ---------------------------------------------------------------- |
+| `401`  | Tidak ada/invalid access token                                   |
+| `400`  | Payload JSON tidak valid / gagal validasi Zod                    |
+| `404`  | Perangkat tidak ditemukan (deviceId tidak valid / belum diklaim) |
+| `500`  | Gagal menghubungi perangkat (offline) atau error internal        |
+
+Format body:
+
+```json
+{
+  "success": false,
+  "message": "<pesan error>"
+}
+```
+
 ---
 
 ### POST /api/pomodoro/stop
@@ -642,9 +678,9 @@ Menghentikan (membatalkan) sesi Pomodoro yang sedang berjalan.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **Request Body (JSON):**
 
@@ -655,10 +691,10 @@ Menghentikan (membatalkan) sesi Pomodoro yang sedang berjalan.
 }
 ```
 
-| Field       | Tipe     | Wajib | Keterangan               |
-| ----------- | -------- | ----- | ------------------------ |
-| `sessionId` | `string` | ✅    | UUID sesi Pomodoro        |
-| `deviceId`  | `string` | ✅    | UUID perangkat            |
+| Field       | Tipe     | Wajib | Keterangan         |
+| ----------- | -------- | ----- | ------------------ |
+| `sessionId` | `string` | ✅    | UUID sesi Pomodoro |
+| `deviceId`  | `string` | ✅    | UUID perangkat     |
 
 **Response `200 OK`:**
 
@@ -666,6 +702,24 @@ Menghentikan (membatalkan) sesi Pomodoro yang sedang berjalan.
 {
   "success": true,
   "message": "Sesi Pomodoro berhasil dibatalkan."
+}
+```
+
+**Error Response (sesuai implementasi saat ini):**
+
+| Status | Kondisi                                                                                                 |
+| ------ | ------------------------------------------------------------------------------------------------------- |
+| `401`  | Tidak ada/invalid access token                                                                          |
+| `400`  | Payload JSON tidak valid / gagal validasi (session/device id) / sesi sudah `completed` atau `cancelled` |
+| `404`  | Sesi tidak ditemukan di database                                                                        |
+| `500`  | Error internal                                                                                          |
+
+Format body:
+
+```json
+{
+  "success": false,
+  "message": "<pesan error>"
 }
 ```
 
@@ -677,9 +731,9 @@ Mengambil semua sesi Pomodoro yang ada di database.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **Response `200 OK`:**
 
@@ -713,15 +767,15 @@ Mengambil riwayat log AI (`aiPomodoroLogs`) dan anomali sensor (`aiSensorEvents`
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **URL Params:**
 
-| Param         | Tipe     | Validasi                  |
-| ------------- | -------- | ------------------------- |
-| `pomodoroId`  | `string` | Tepat 36 karakter (UUID)    |
+| Param        | Tipe     | Validasi                 |
+| ------------ | -------- | ------------------------ |
+| `pomodoroId` | `string` | Tepat 36 karakter (UUID) |
 
 **Response `200 OK`:**
 
@@ -768,15 +822,15 @@ Menghapus sesi Pomodoro beserta log-nya berdasarkan session ID.
 
 **Headers:**
 
-| Header          | Nilai                      |
-| --------------- | -------------------------- |
-| `Authorization` | `Bearer <accessToken>`     |
+| Header          | Nilai                  |
+| --------------- | ---------------------- |
+| `Authorization` | `Bearer <accessToken>` |
 
 **URL Params:**
 
-| Param         | Tipe     | Validasi                  |
-| ------------- | -------- | ------------------------- |
-| `pomodoroId`  | `string` | Tepat 36 karakter (UUID)    |
+| Param        | Tipe     | Validasi                 |
+| ------------ | -------- | ------------------------ |
+| `pomodoroId` | `string` | Tepat 36 karakter (UUID) |
 
 **Response `200 OK`:**
 
@@ -802,9 +856,9 @@ Menggunakan `deviceAuthMiddleware` — autentikasi via IoT token permanen.
 ws://<host>/api/ws/iot?token=<jwt-iot-token>
 ```
 
-| Query Param | Tipe     | Keterangan                                    |
-| ----------- | -------- | --------------------------------------------- |
-| `token`     | `string` | IoT JWT token (didapat dari endpoint poll)     |
+| Query Param | Tipe     | Keterangan                                 |
+| ----------- | -------- | ------------------------------------------ |
+| `token`     | `string` | IoT JWT token (didapat dari endpoint poll) |
 
 > Alternatif: Bisa juga via Header `Authorization: Bearer <jwt-iot-token>`
 
@@ -823,10 +877,10 @@ Menerima data sensor telemetri secara real-time dari perangkat IoT yang terhubun
 ws://<host>/api/ws/web?token=<jwt-access-token>&deviceId=<uuid-perangkat>
 ```
 
-| Query Param | Tipe     | Wajib | Keterangan                                    |
-| ----------- | -------- | ----- | --------------------------------------------- |
-| `token`     | `string` | ✅    | JWT access token user (dari login)             |
-| `deviceId`  | `string` | ✅    | UUID perangkat (36 karakter)                   |
+| Query Param | Tipe     | Wajib | Keterangan                         |
+| ----------- | -------- | ----- | ---------------------------------- |
+| `token`     | `string` | ✅    | JWT access token user (dari login) |
+| `deviceId`  | `string` | ✅    | UUID perangkat (36 karakter)       |
 
 > **Catatan:** WebSocket tidak bisa mengirim custom header, maka autentikasi dilakukan via query string. Server memverifikasi token dan kepemilikan device sebelum mengizinkan koneksi.
 
@@ -852,31 +906,34 @@ ws://<host>/api/ws/web?token=<jwt-access-token>&deviceId=<uuid-perangkat>
 
 **Error Response (sebelum upgrade WebSocket):**
 
-| Status | Kondisi                                    |
-| ------ | ------------------------------------------ |
-| `401`  | Token tidak ditemukan atau tidak valid       |
-| `400`  | Parameter `deviceId` tidak ada              |
-| `404`  | Device tidak ditemukan                      |
-| `403`  | Device bukan milik user                    |
+| Status | Kondisi                                |
+| ------ | -------------------------------------- |
+| `401`  | Token tidak ditemukan atau tidak valid |
+| `400`  | Parameter `deviceId` tidak ada         |
+| `400`  | Parameter `deviceId` tidak 36 karakter |
+| `404`  | Device tidak ditemukan                 |
+| `403`  | Device bukan milik user                |
 
 **Contoh penggunaan di Frontend (JavaScript):**
 
 ```javascript
-const token = localStorage.getItem('accessToken');
-const deviceId = 'uuid-perangkat';
-const ws = new WebSocket(`wss://<host>/api/ws/web?token=${token}&deviceId=${deviceId}`);
+const token = localStorage.getItem("accessToken");
+const deviceId = "uuid-perangkat";
+const ws = new WebSocket(
+  `wss://<host>/api/ws/web?token=${token}&deviceId=${deviceId}`,
+);
 
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  if (data.type === 'TELEMETRY_UPDATE') {
-    console.log('Sensor:', data.payload);
+  if (data.type === "TELEMETRY_UPDATE") {
+    console.log("Sensor:", data.payload);
     // { temperature: 27.5, lightLux: 300.2, noiseLevel: 40.1 }
   }
 };
 
 // Keep-alive ping
 setInterval(() => {
-  if (ws.readyState === WebSocket.OPEN) ws.send('ping');
+  if (ws.readyState === WebSocket.OPEN) ws.send("ping");
 }, 30000);
 ```
 
@@ -907,8 +964,8 @@ Endpoint untuk cek status kesehatan API.
 
 ## Ringkasan Autentikasi
 
-| Mekanisme                | Sumber Token                                       | Digunakan Oleh         |
-| ------------------------ | -------------------------------------------------- | ---------------------- |
-| **authMiddleware**       | Header `Authorization: Bearer <token>` ATAU Cookie `authToken` | Endpoint user & device |
-| **refreshTokenMiddleware** | Header `X-Refresh-Token` ATAU Cookie `refreshToken` | `POST /api/auth/refresh` |
-| **deviceAuthMiddleware** | Header `Authorization: Bearer <token>` ATAU query `?token=<token>` | WebSocket IoT          |
+| Mekanisme                  | Sumber Token                                                       | Digunakan Oleh           |
+| -------------------------- | ------------------------------------------------------------------ | ------------------------ |
+| **authMiddleware**         | Header `Authorization: Bearer <token>` ATAU Cookie `authToken`     | Endpoint user & device   |
+| **refreshTokenMiddleware** | Header `X-Refresh-Token` ATAU Cookie `refreshToken`                | `POST /api/auth/refresh` |
+| **deviceAuthMiddleware**   | Header `Authorization: Bearer <token>` ATAU query `?token=<token>` | WebSocket IoT            |

@@ -19,3 +19,8 @@ export const pomodoroIdParamSchema = z.object({
   pomodoroId: z.string()
     .length(36, 'ID pomodoro harus 36 karakter.'),
 })
+
+export const stopPomodoroSchema = z.object({
+  sessionId: z.string().length(36, 'Session ID harus 36 karakter.'),
+  deviceId: z.string().length(36, 'ID perangkat harus 36 karakter.'),
+})

@@ -18,6 +18,11 @@ export const deviceIdParamSchema = z.object({
     .length(36, 'ID perangkat harus 36 karakter.'),
 })
 
+export const deviceIdRouteParamSchema = z.object({
+  id: z.string()
+    .length(36, 'ID perangkat harus 36 karakter.'),
+})
+
 // ====================================================
 // 📡 SKEMA VALIDASI PENGATURAN HARDWARE (Brightness & Volume)
 // ====================================================

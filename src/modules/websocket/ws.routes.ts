@@ -55,6 +55,9 @@ ws.get('/web', async (c) => {
   if (!deviceId) {
     return c.json({ success: false, message: 'Parameter deviceId wajib diisi.' }, 400)
   }
+  if (deviceId.length !== 36) {
+    return c.json({ success: false, message: 'Parameter deviceId harus 36 karakter.' }, 400)
+  }
 
   // 2. Verifikasi access token secara manual (karena WebSocket tidak bisa pakai middleware biasa)
   const { getConfig } = await import('@/config/env')

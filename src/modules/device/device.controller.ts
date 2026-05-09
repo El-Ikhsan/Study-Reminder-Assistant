@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { validateBody, validateParam } from '@/utils/validation'
 import * as deviceService from './device.service'
-import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema, setBrightnessSchema, setVolumeSchema } from './device.validation'
+import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema, deviceIdRouteParamSchema, setBrightnessSchema, setVolumeSchema } from './device.validation'
 
 export const checkClaimStatus = async (c: Context) => {
  const deviceIotIdData = validateParam(c, claimStatusCheckSchema)
@@ -25,7 +25,8 @@ export const claimDevice = async (c: Context) => {
 }
 export const renewToken = async (c: Context) => {
   const user = c.get('user')
-  const deviceId = c.req.param('id') as string // Ambil ID dari URL params
+  const params = validateParam(c, deviceIdRouteParamSchema)
+  const deviceId = params.id
   
   const result = await deviceService.renewDeviceToken(user.userId, deviceId)
   return c.json({ success: true, message: 'Token berhasil diperbarui', data: result })
