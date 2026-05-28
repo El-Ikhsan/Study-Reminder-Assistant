@@ -27,37 +27,42 @@ export type TimePhase = "awal" | "tengah" | "akhir";
 // ----------------------------------------------------------------------------
 
 const SENSOR_EMOTIONS: Record<string, string[]> = {
+  // Interupsi (Kondisi Buruk)
   "Interupsi: Suhu Panas": ["HOT"],
   "Interupsi: Suhu Dingin Extrem": ["COLD"],
   "Interupsi: Suara Bising": ["NOISY"],
   "Interupsi: Cahaya Gelap": ["DARK"],
   "Interupsi: Cahaya Silau": ["GLARE"],
 
-  "Transisi: Suhu Panas ke Sejuk": ["IDLE", "NEUTRAL"],
-  "Transisi: Suhu Panas ke Hangat": ["IDLE"],
-  "Transisi: Suhu Dingin Extrem ke Sejuk": ["IDLE"],
-  "Transisi: Suhu Dingin Extrem ke Dingin": ["IDLE"],
-  "Transisi: Suara Bising ke Ramai": ["IDLE"],
-  "Transisi: Suara Bising ke Normal": ["IDLE", "NEUTRAL"],
-  "Transisi: Suara Bising ke Sunyi": ["IDLE", "NEUTRAL"],
-  "Transisi: Cahaya Gelap ke Redup": ["IDLE"],
-  "Transisi: Cahaya Gelap ke Terang": ["IDLE", "NEUTRAL"],
-  "Transisi: Cahaya Silau ke Terang": ["IDLE", "NEUTRAL"]
+  // Transisi (Pemulihan ke Kondisi Optimal)
+  "Transisi: Suhu Panas ke Sejuk": ["RECOVERY"],
+  "Transisi: Suhu Panas ke Hangat": ["RECOVERY"],
+  "Transisi: Suhu Dingin Extrem ke Sejuk": ["RECOVERY"],
+  "Transisi: Suhu Dingin Extrem ke Dingin": ["RECOVERY"],
+  "Transisi: Suara Bising ke Ramai": ["RECOVERY"],
+  "Transisi: Suara Bising ke Normal": ["RECOVERY"],
+  "Transisi: Suara Bising ke Sunyi": ["RECOVERY"],
+  "Transisi: Cahaya Gelap ke Redup": ["RECOVERY"],
+  "Transisi: Cahaya Gelap ke Terang": ["RECOVERY"],
+  "Transisi: Cahaya Silau ke Terang": ["RECOVERY"]
 };
 
 const TIME_EMOTIONS: Record<string, string[]> = {
+  // Pomodoro Fokus
   "Pomodoro: Fase Awal Fokus": ["IDLE"],
   "Pomodoro: Fase Pertengahan Fokus": ["IDLE"],
-  "Pomodoro: Fase Akhir Fokus": ["SURPRISED", "IDLE"],
-  "Pomodoro: Fase Istirahat Pendek": ["DARK", "IDLE"],
-  "Pomodoro: Fase Istirahat Panjang": ["SLEEPY"],
-  "Pomodoro: Fase Peringatan Istirahat Akhir": ["SLEEPY", "IDLE"],
-  "Pomodoro: Sesi Selesai": ["IDLE", "NEUTRAL"]
+  "Pomodoro: Fase Akhir Fokus": ["IDLE"],
+
+  // Pomodoro Istirahat (Cocok menggunakan GIF Pemulihan)
+  "Pomodoro: Fase Istirahat Pendek": ["RECOVERY"],
+  "Pomodoro: Fase Istirahat Panjang": ["RECOVERY"],
+  "Pomodoro: Fase Peringatan Istirahat Akhir": ["IDLE"],
+  "Pomodoro: Sesi Selesai": ["RECOVERY", "IDLE"]
 };
 
 const getMimikSensor = (key: string): string => {
   const cleanKey = key.split(" [")[0];
-  const emotions = SENSOR_EMOTIONS[cleanKey] || ["UNCOMFOTABLE"];
+  const emotions = SENSOR_EMOTIONS[cleanKey] || ["IDLE"];
   return emotions[Math.floor(Math.random() * emotions.length)];
 };
 
@@ -76,6 +81,12 @@ const getLightString = (l: number) => l >= 700 ? "Silau" : l >= 150 ? "Terang" :
 const getNoiseString = (n: number) => n >= 80 ? "Bising" : n >= 65 ? "Ramai" : n >= 50 ? "Normal" : "Sunyi";
 
 export const checkSensorCondition = (temperature: number, lightLux: number, noiseLevel: number): string => {
+
+  let lightKey = "Cahaya Terang"; let lightPoint = 3;
+  if (lightLux >= 700) { lightKey = "Cahaya Silau"; lightPoint = 1; }
+  else if (lightLux >= 50 && lightLux < 150) { lightKey = "Cahaya Redup"; lightPoint = 2; }
+  else if (lightLux < 50) { lightKey = "Cahaya Gelap"; lightPoint = 1; }
+
   let tempKey = "Suhu Sejuk"; let tempPoint = 3;
   if (temperature >= 31) { tempKey = "Suhu Panas"; tempPoint = 1; }
   else if (temperature >= 28 && temperature < 31) { tempKey = "Suhu Hangat"; tempPoint = 2; }
@@ -85,13 +96,18 @@ export const checkSensorCondition = (temperature: number, lightLux: number, nois
   if (noiseLevel >= 80) { noiseKey = "Suara Bising"; noisePoint = 1; }
   else if (noiseLevel >= 65 && noiseLevel < 80) { noiseKey = "Suara Ramai"; noisePoint = 2; }
 
-  let lightKey = "Cahaya Terang"; let lightPoint = 3;
-  if (lightLux >= 700) { lightKey = "Cahaya Silau"; lightPoint = 1; }
-  else if (lightLux >= 50 && lightLux < 150) { lightKey = "Cahaya Redup"; lightPoint = 2; }
-  else if (lightLux < 50) { lightKey = "Cahaya Gelap"; lightPoint = 1; }
+  const point1s = [
+    { point: lightPoint, key: lightKey }, // Prioritas 1
+    { point: tempPoint, key: tempKey },   // Prioritas 2
+    { point: noisePoint, key: noiseKey }  // Prioritas 3
+  ].filter(r => r.point === 1);
 
-  const point1s = [{ point: tempPoint, key: tempKey }, { point: noisePoint, key: noiseKey }, { point: lightPoint, key: lightKey }].filter(r => r.point === 1);
-  const point2s = [{ point: tempPoint, key: tempKey }, { point: noisePoint, key: noiseKey }, { point: lightPoint, key: lightKey }].filter(r => r.point === 2);
+  const point2s = [
+    { point: lightPoint, key: lightKey },
+    { point: tempPoint, key: tempKey },
+    { point: noisePoint, key: noiseKey }
+  ].filter(r => r.point === 2);
+
 
   if (point1s.length > 0) return point1s[0].key;
   if (point2s.length > 0) return point2s[0].key;
@@ -106,75 +122,101 @@ const getConditionPoint = (condition: string): number => {
 };
 
 // ============================================================================
-// ⚙️ FUNGSI ANALISIS SENSOR (INTERUPSI & PEMULIHAN)
+// ⚙️ FUNGSI ANALISIS SENSOR (INTERUPSI & PEMULIHAN YANG DISEMPURNAKAN)
 // ============================================================================
-
 export const analyzeEnvironment = (sensor: any) => {
   const { temperature, lightLux, noiseLevel, media, lastCondition } = sensor;
-  const currentCondition = checkSensorCondition(temperature, lightLux, noiseLevel);
-
-  if (currentCondition === lastCondition) return null;
-
-  const currentPoint = getConditionPoint(currentCondition);
   const cleanLastCondition = lastCondition ? lastCondition.replace("Interupsi: ", "").replace("Transisi: ", "").split(" [")[0] : "Kondisi Optimal";
-  const lastPoint = getConditionPoint(cleanLastCondition);
 
-  // 1. LOGIKA PEMULIHAN
-  if (currentPoint > lastPoint) {
+  // =====================================
+  // 1. CEK SPESIFIK UNTUK PEMULIHAN
+  // (Mengabaikan sistem poin agar tidak bentrok dengan sensor lain)
+  // =====================================
+  if (cleanLastCondition !== "Kondisi Optimal") {
     let currentLabel = "Optimal";
-    if (cleanLastCondition.includes("Suhu")) currentLabel = getTempString(temperature);
-    else if (cleanLastCondition.includes("Suara")) currentLabel = getNoiseString(noiseLevel);
-    else if (cleanLastCondition.includes("Cahaya")) currentLabel = getLightString(lightLux);
+    let displayLabel = "Optimal";
+    let isRecovered = false;
 
-    const recoveryKey = `Transisi: ${cleanLastCondition} ke ${currentLabel}`;
+    if (cleanLastCondition.includes("Suhu")) {
+      currentLabel = getTempString(temperature);
+      // Pulih jika sudah tidak Panas dan tidak Dingin Extrem
+      if (currentLabel !== "Panas" && currentLabel !== "Dingin Extrem") {
+        displayLabel = `Suhu ${currentLabel}`;
+        isRecovered = true;
+      }
+    }
+    else if (cleanLastCondition.includes("Suara")) {
+      currentLabel = getNoiseString(noiseLevel);
+      // Pulih jika sudah tidak Bising
+      if (currentLabel !== "Bising") {
+        displayLabel = `Suara ${currentLabel}`;
+        isRecovered = true;
+      }
+    }
+    else if (cleanLastCondition.includes("Cahaya")) {
+      currentLabel = getLightString(lightLux);
+      // Pulih jika sudah tidak Gelap DAN tidak Silau (karena Senter HP)
+      if (currentLabel !== "Gelap" && currentLabel !== "Silau") {
+        displayLabel = `Cahaya ${currentLabel}`;
+        isRecovered = true;
+      }
+    }
 
-    const allowedTransitions = [
-      "Transisi: Suhu Panas ke Hangat",
-      "Transisi: Suhu Panas ke Sejuk",
-      "Transisi: Suhu Dingin Extrem ke Dingin",
-      "Transisi: Suhu Dingin Extrem ke Sejuk",
-      "Transisi: Cahaya Gelap ke Redup",
-      "Transisi: Cahaya Gelap ke Terang",
-      "Transisi: Cahaya Silau ke Terang",
-      "Transisi: Suara Bising ke Ramai",
-      "Transisi: Suara Bising ke Normal",
-      "Transisi: Suara Bising ke Sunyi"
-    ];
+    if (isRecovered) {
+      const recoveryKey = `Transisi: ${cleanLastCondition} ke ${currentLabel}`;
 
-    if (!allowedTransitions.includes(recoveryKey)) return null;
+      const allowedTransitions = [
+        "Transisi: Suhu Panas ke Hangat", "Transisi: Suhu Panas ke Sejuk",
+        "Transisi: Suhu Dingin Extrem ke Dingin", "Transisi: Suhu Dingin Extrem ke Sejuk",
+        "Transisi: Cahaya Gelap ke Redup", "Transisi: Cahaya Gelap ke Terang",
+        "Transisi: Cahaya Silau ke Terang", "Transisi: Suara Bising ke Ramai",
+        "Transisi: Suara Bising ke Normal", "Transisi: Suara Bising ke Sunyi"
+      ];
 
-    // 🎲 GACHA MEDIA (70% Masuk)
-    const useMedia = Math.random() < 0.7;
-    const mediaStr = (useMedia && media) ? ` [Media: ${media}]` : "";
-    const finalUserPrompt = `${recoveryKey}${mediaStr}`;
+      // Jika transisi sah, langsung kembalikan payload Pemulihan!
+      if (allowedTransitions.includes(recoveryKey)) {
+        const useMedia = Math.random() < 0.7;
+        const mediaStr = (useMedia && media) ? ` [Media: ${media}]` : "";
+        const finalUserPrompt = `${recoveryKey}${mediaStr}`;
 
-    const sysPrompt = [
-      "[MODE: PEMULIHAN LINGKUNGAN]",
-      "Kamu adalah Rinchan. PERAN: Merespons Pemulihan Ruangan.",
-      "SIFAT: Kuudere, merasa lega, dan sedikit gengsi.",
-      "TUGAS UTAMA: Akui bahwa kondisi transisi ruangan sudah membaik berdasarkan input, lalu berikan arahan tegas untuk kembali mengerjakan tugas.",
-      "ATURAN KETAT:",
-      "1. Maksimal 1-2 kalimat (sekitar 10-15 kata).",
-      "2. DILARANG KERAS menyebutkan angka sensor dalam bentuk apapun.",
-      "3. JANGAN mengulangi peringatan, cukup nyatakan kelegaan."
-    ].join(" ");
+        const sysPrompt = [
+          "[MODE: PEMULIHAN LINGKUNGAN]",
+          "Kamu adalah Rinchan. PERAN: Merespons Pemulihan Ruangan.",
+          "SIFAT: Kuudere, merasa lega, dan sedikit gengsi.",
+          "TUGAS UTAMA: Akui bahwa kondisi transisi ruangan sudah membaik berdasarkan input, lalu berikan arahan tegas untuk kembali mengerjakan tugas.",
+          "ATURAN KETAT:",
+          "1. Maksimal 1-2 kalimat (sekitar 10-15 kata).",
+          "2. DILARANG KERAS menyebutkan angka sensor dalam bentuk apapun.",
+          "3. JANGAN mengulangi peringatan, cukup nyatakan kelegaan."
+        ].join(" ");
 
-    return {
-      input: finalUserPrompt,
-      instruction: sysPrompt,
-      inferenceParams: { temperature: 0.55, topK: 50 },
-      emotion: getMimikSensor(recoveryKey),
-      newCondition: currentCondition
-    };
+        return {
+          input: finalUserPrompt,
+          instruction: sysPrompt,
+          inferenceParams: { temperature: 0.55, topK: 50 },
+          emotion: getMimikSensor(recoveryKey),
+          newCondition: displayLabel
+        };
+      }
+    }
+    return null;
   }
 
-  // 2. LOGIKA INTERUPSI
-  if (currentPoint === 1 && currentCondition !== cleanLastCondition) {
-    const interupsiKey = `Interupsi: ${currentCondition}`;
+  // =====================================
+  // 2. CEK INTERUPSI BARU (Jika tidak ada pemulihan)
+  // =====================================
+  const currentCondition = checkSensorCondition(temperature, lightLux, noiseLevel);
 
-    // 🎲 GACHA MEDIA (70% Masuk)
+  if (currentCondition === lastCondition || currentCondition === "Kondisi Optimal") return null;
+
+  const currentPoint = getConditionPoint(currentCondition);
+
+  // Jika poinnya 1, berarti ada masalah lingkungan baru!
+  if (currentPoint === 1) {
+    const interupsiKey = `Interupsi: ${currentCondition}`;
     const useMedia = Math.random() < 0.7;
     const mediaStr = (useMedia && media) ? ` [Media: ${media}]` : "";
+
     const finalUserPrompt = `${interupsiKey}${mediaStr}`;
 
     const sysPrompt = [
@@ -199,6 +241,8 @@ export const analyzeEnvironment = (sensor: any) => {
 
   return null;
 };
+
+
 
 // ============================================================================
 // ⏱️ PEMBUAT PROMPT POMODORO (Manajemen Waktu)

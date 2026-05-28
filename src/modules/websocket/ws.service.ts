@@ -305,7 +305,7 @@ export async function processVoiceChat(
     logger.info(`[🗣️] User berkata: "${userText}"`);
 
     if (!userText) {
-      return { emotion: 'SURPRISED', text: 'Eh? Aku tidak mendengar apapun.' };
+      return { emotion: 'HOT', text: 'Eh? Aku tidak mendengar apapun.' };
     }
 
     const systemInstruction = [
@@ -328,7 +328,7 @@ export async function processVoiceChat(
     const aiReply = await askRinchanAIForDO(userText, systemInstruction, { temperature: 0.7, topK: 50 }, env);
     logger.info(`[🤖] Rin-chan membalas: "${aiReply}"`);
 
-    return { emotion: 'COLD', text: aiReply };
+    return { emotion: 'IDLE', text: aiReply };
 
   } catch (error: any) {
     logger.error("[AI] Error di processVoiceChat:", error);
