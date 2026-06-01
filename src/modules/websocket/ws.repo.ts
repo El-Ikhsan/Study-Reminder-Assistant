@@ -1,5 +1,5 @@
 import { getDbForDO } from '@/db/client'
-import { aiPomodoroLogs, aiSensorEvents, pomodoroSessions } from '@/db/schema'
+import { aiPomodoroLogs, aiSensorLogs, pomodoroSessions } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { logger } from '@/utils/logger'
 
@@ -36,7 +36,7 @@ export const saveAiSensorEventForDO = async (env: any, data: {
 }) => {
   try {
     const db = getDbForDO(env)
-    await db.insert(aiSensorEvents).values({
+    await db.insert(aiSensorLogs).values({
       id: crypto.randomUUID(),
       ...data
     })

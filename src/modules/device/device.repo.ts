@@ -30,11 +30,6 @@ export const updateDeviceData = async (id: string, data: Partial<typeof devices.
   await db.update(devices).set(data).where(eq(devices.id, id))
 }
 
-export const updateDeviceLastSeen = async (id: string) => {
-  const db = getDb()
-  await db.update(devices).set({ lastSeen: new Date() }).where(eq(devices.id, id))
-}
-
 export const deletePomodoroSessionsByDeviceId = async (deviceId: string) => {
   const db = getDb()
   await db.delete(pomodoroSessions).where(eq(pomodoroSessions.deviceId, deviceId))

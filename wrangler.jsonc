@@ -20,8 +20,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "rinchan-db",
-			"database_id": "80212d54-f465-4b93-b456-e739f20ba8f6",
+			"database_name": "rinchan-db2",
+			"database_id": "cb7d884e-ffa9-4a6e-b553-c3260ecdbabd",
 			"migrations_dir": "./drizzle"
 		}
 	],

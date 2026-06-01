@@ -10,7 +10,7 @@ export const checkClaimStatus = async (deviceIotId: string) => {
   const config = getConfig()
 
   let device = await deviceRepo.findDeviceByDeviceIotId(deviceIotId)
-  
+
   if (!device) {
     device = await deviceRepo.insertDeviceIotId({
       id: crypto.randomUUID(),
@@ -19,19 +19,16 @@ export const checkClaimStatus = async (deviceIotId: string) => {
     })
   }
 
-  // Update lastSeen setiap kali device polling
-  await deviceRepo.updateDeviceLastSeen(device.id)
-
   if (!device.userId) {
 
     return {
-      status: 'waiting', 
+      status: 'waiting',
       device: {
         deviceIotId: device.deviceIotId,
         deviceName: device.deviceName,
         deviceStatus: device.status,
       },
-      apiKey: null 
+      apiKey: null
     }
   }
 
@@ -41,18 +38,18 @@ export const checkClaimStatus = async (deviceIotId: string) => {
   )
 
   return {
-    status: 'claimed', 
+    status: 'claimed',
     device: {
       deviceIotId: device.deviceIotId,
       deviceName: device.deviceName,
       deviceStatus: device.status,
     },
-    apiKey: apiKey 
+    apiKey: apiKey
   }
 }
 
 export const claimNewDevice = async (userId: string, deviceIotId: string, deviceName: string) => {
-  
+
   // 1. Cek apakah UUID sudah diklaim orang lain
   const deviceData = await deviceRepo.findDeviceByDeviceIotId(deviceIotId)
   if (!deviceData) {
@@ -78,7 +75,7 @@ export const claimNewDevice = async (userId: string, deviceIotId: string, device
 
 export const renewDeviceToken = async (userId: string, deviceId: string) => {
   const device = await deviceRepo.findDeviceById(deviceId)
-  
+
   if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
   if (device.userId !== userId) throw new ResponseError(403, 'Akses ditolak.')
 

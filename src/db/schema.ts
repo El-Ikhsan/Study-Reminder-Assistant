@@ -8,6 +8,9 @@ export const users = sqliteTable("users", {
   password: text("password", { length: 255 }).notNull(),
   avatarUrl: text("avatar_url", { length: 255 }),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .default(sql`(strftime('%s', 'now'))`)
+    .$onUpdate(() => new Date()),
 });
 
 export const devices = sqliteTable("devices", {
@@ -17,8 +20,10 @@ export const devices = sqliteTable("devices", {
   deviceName: text("device_name", { length: 20 }).notNull().default("Unnamed Device"),
   tokenVersion: integer("token_version").notNull().default(1),
   status: text("status", { enum: ["claimed", "unclaimed"] }).default("unclaimed"),
-  lastSeen: integer("last_seen", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .default(sql`(strftime('%s', 'now'))`)
+    .$onUpdate(() => new Date()),
 });
 
 export const pomodoroSessions = sqliteTable("pomodoro_sessions", {
@@ -48,7 +53,7 @@ export const aiPomodoroLogs = sqliteTable("ai_pomodoro_logs", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(strftime('%s', 'now'))`),
 });
 
-export const aiSensorEvents = sqliteTable("ai_sensor_events", {
+export const aiSensorLogs = sqliteTable("ai_sensor_logs", {
   id: text("id", { length: 36 }).primaryKey(),
   sessionId: text("session_id", { length: 36 }).references(() => pomodoroSessions.id, { onDelete: "cascade" }).notNull(),
   eventType: text("event_type", { enum: ["interupsi", "pemulihan"] }).notNull(),
@@ -58,7 +63,6 @@ export const aiSensorEvents = sqliteTable("ai_sensor_events", {
   temperatureAtTime: real("temperature_at_time").notNull(),
   lightAtTime: real("light_at_time").notNull(),
   noiseAtTime: real("noise_at_time").notNull(),
-
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(strftime('%s', 'now'))`),
 });
 
@@ -89,7 +93,7 @@ export const pomodoroSessionsRelations = relations(pomodoroSessions, ({ one, man
     references: [devices.id],
   }),
   pomodoroLogs: many(aiPomodoroLogs),
-  sensorEvents: many(aiSensorEvents),
+  sensorLogs: many(aiSensorLogs),
 }));
 
 export const aiPomodoroLogsRelations = relations(aiPomodoroLogs, ({ one }) => ({
@@ -99,9 +103,9 @@ export const aiPomodoroLogsRelations = relations(aiPomodoroLogs, ({ one }) => ({
   }),
 }));
 
-export const aiSensorEventsRelations = relations(aiSensorEvents, ({ one }) => ({
+export const aiSensorLogsRelations = relations(aiSensorLogs, ({ one }) => ({
   session: one(pomodoroSessions, {
-    fields: [aiSensorEvents.sessionId],
+    fields: [aiSensorLogs.sessionId],
     references: [pomodoroSessions.id],
   }),
 }));
