@@ -13,16 +13,16 @@ export const createSession = async (data: {
 }) => {
   try {
     const db = getDb()
-    
+
     // 1. Buat Sesi Baru
     await db.insert(pomodoroSessions).values(data)
-    
+
     // 2. ✨ LOGIKA HEMAT KUOTA BERBASIS SESI (Limit 30 Sesi) ✨
     // Cek total sesi untuk alat ini
     const result = await db.select({ total: count() })
       .from(pomodoroSessions)
       .where(eq(pomodoroSessions.deviceId, data.deviceId))
-      
+
     // Jika jumlah sesi menyentuh 40, buang sesi-sesi lama dan sisakan 30 terbaru
     if (result[0].total >= 40) {
       logger.info(`[PomodoroRepo] Memulai pembersihan sesi lama untuk ${data.deviceId}...`)
@@ -59,7 +59,7 @@ export const findPomodoroLogsBySessionId = async (sessionId: string) => {
   return await db.select().from(aiPomodoroLogs).where(eq(aiPomodoroLogs.sessionId, sessionId))
 }
 
-export const findSensorEventsBySessionId = async (sessionId: string) => {
+export const findSensorLogsBySessionId = async (sessionId: string) => {
   const db = getDb()
   return await db.select().from(aiSensorLogs).where(eq(aiSensorLogs.sessionId, sessionId))
 }

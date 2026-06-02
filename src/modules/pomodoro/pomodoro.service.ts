@@ -63,7 +63,7 @@ export const stopSession = async (sessionId: string, deviceId: string, env: Bind
 
 export const getPomodoroHistoryById = async (pomodoroId: string) => {
   const pomodoroLogs = await pomodoroRepo.findPomodoroLogsBySessionId(pomodoroId)
-  const sensorLogs = await pomodoroRepo.findSensorEventsBySessionId(pomodoroId)
+  const sensorLogs = await pomodoroRepo.findSensorLogsBySessionId(pomodoroId)
   return { pomodoroLogs, sensorLogs }
 }
 
