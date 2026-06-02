@@ -13,6 +13,14 @@ export const claimDeviceSchema = z.object({
     .max(20, 'Nama perangkat maksimal 20 karakter.'),
 })
 
+export const updateDeviceSchema = z.object({
+  deviceName: z.string()
+    .min(3, 'Nama perangkat minimal 3 karakter.')
+    .max(20, 'Nama perangkat maksimal 20 karakter.')
+    .optional(),
+  tokenVersion: z.number().int().optional(),
+})
+
 export const deviceIdParamSchema = z.object({
   deviceId: z.string()
     .length(36, 'ID perangkat harus 36 karakter.'),

@@ -86,6 +86,16 @@ export const renewDeviceToken = async (userId: string, deviceId: string) => {
   return { version: newVersion }
 }
 
+export const updateDevice = async (userId: string, deviceId: string, data: { deviceName?: string, tokenVersion?: number }) => {
+  const device = await deviceRepo.findDeviceById(deviceId)
+  if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
+  if (device.userId !== userId) throw new ResponseError(403, 'Akses ditolak.')
+
+  await deviceRepo.updateDeviceData(deviceId, data)
+  const updatedDevice = await deviceRepo.findDeviceById(deviceId)
+  return updatedDevice
+}
+
 export const getUserDevices = async (userId: string) => {
   return await deviceRepo.findDevicesByUserId(userId)
 }
