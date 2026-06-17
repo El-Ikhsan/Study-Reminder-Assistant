@@ -8,18 +8,28 @@ import { findDeviceById } from '@/modules/device/device.repo'
 export const startSession = async (deviceId: string, recipe: any, env: Bindings) => {
   const sessionId = crypto.randomUUID()
 
-  // Cek deviceId valid
   const device = await findDeviceById(deviceId)
   if (!device) {
     throw new ResponseError(404, 'Perangkat tidak ditemukan. Pastikan deviceId valid dan sudah diklaim.')
   }
+
+  let exactStartTime = new Date()
+
   try {
-    await sendToIoT(deviceId, "CMD_START_POMODORO", { sessionId, ...recipe }, env)
+    // 1. Tahan API (Await) sampai ESP32 menerima perintah dan mengirim CMD_ACK
+    const ackRes = await sendToIoT(deviceId, "CMD_START_POMODORO", { sessionId, ...recipe }, env)
+    
+    // ✨ Ambil waktu presisi dari ESP32 (yang punya data NTP)
+    if (ackRes?.payload?.startedAt) {
+      exactStartTime = new Date(Number(ackRes.payload.startedAt))
+      logger.info(`[Start] Waktu persis NTP diterima dari ESP32: ${exactStartTime.toISOString()}`)
+    }
   } catch (error: any) {
-    logger.error(`[Start] Gagal terhubung ke device ${deviceId}. Perangkat offline.`)
+    logger.error(`[Start] Gagal terhubung ke device ${deviceId}. Perangkat offline atau lambat.`)
     throw new ResponseError(500, "Gagal memulai sesi. Pastikan perangkat Rinchan menyala dan terhubung ke WiFi.")
   }
 
+  // 3. Simpan ke database dengan waktu yang sudah sinkron
   await pomodoroRepo.createSession({
     id: sessionId,
     deviceId: deviceId,
@@ -30,13 +40,20 @@ export const startSession = async (deviceId: string, recipe: any, env: Bindings)
     currentCycle: recipe.currentCycle || 1,
     currentMode: (recipe.currentMode || 'fokus') as 'fokus' | 'istirahat',
     currentPhase: (recipe.currentPhase || 'awal') as 'awal' | 'tengah' | 'akhir',
-    status: (recipe.status || 'running') as 'running' | 'paused' | 'completed' | 'cancelled'
+    status: (recipe.status || 'running') as 'running' | 'paused' | 'completed' | 'cancelled',
+    // ✨ Pastikan schema repo kamu mendukung insert `startedAt` secara manual
+    startedAt: exactStartTime
   })
 
   logger.info(`Sesi Pomodoro [${sessionId}] berhasil dimulai untuk perangkat ${deviceId}`)
-  return { sessionId, message: 'Data konfigurasi berhasil dikirim dan perangkat merespons.' }
-}
 
+  // ✨ 4. Kembalikan waktu akurat ke Frontend agar UI bisa menyesuaikan countdown-nya!
+  return {
+    sessionId,
+    startedAt: exactStartTime.toISOString(),
+    message: 'Data konfigurasi berhasil dikirim dan perangkat merespons.'
+  }
+}
 
 export const stopSession = async (sessionId: string, deviceId: string, env: Bindings) => {
   const currentSession = await pomodoroRepo.findPomodoroSessionById(sessionId)

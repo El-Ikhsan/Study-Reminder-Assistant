@@ -19,6 +19,8 @@ export const devices = sqliteTable("devices", {
   userId: text("user_id", { length: 36 }).references(() => users.id, { onDelete: "set null" }),
   deviceName: text("device_name", { length: 20 }).notNull().default("Unnamed Device"),
   tokenVersion: integer("token_version").notNull().default(1),
+  brightness: integer("brightness").notNull().default(50),
+  volume: integer("volume").notNull().default(50),
   status: text("status", { enum: ["claimed", "unclaimed"] }).default("unclaimed"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer("updated_at", { mode: "timestamp" })

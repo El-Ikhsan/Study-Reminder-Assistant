@@ -1,5 +1,5 @@
 // ============================================================================
-// 🧠 RINCHAN CLASSIFIER SERVICE (FINAL V8 - GGUF 0.55 + GACHA 70/30 + UPDATED PROMPT)
+// 🧠 RINCHAN CLASSIFIER SERVICE (FINAL V8 - GGUF 0.5 + GACHA 70/30 + UPDATED PROMPT)
 // ============================================================================
 
 export type SensorData = {
@@ -193,7 +193,7 @@ export const analyzeEnvironment = (sensor: any) => {
         return {
           input: finalUserPrompt,
           instruction: sysPrompt,
-          inferenceParams: { temperature: 0.55, topK: 50 },
+          inferenceParams: { temperature: 0.5, topK: 50 },
           emotion: getMimikSensor(recoveryKey),
           newCondition: displayLabel
         };
@@ -233,7 +233,7 @@ export const analyzeEnvironment = (sensor: any) => {
     return {
       input: finalUserPrompt,
       instruction: sysPrompt,
-      inferenceParams: { temperature: 0.55, topK: 50 },
+      inferenceParams: { temperature: 0.5, topK: 50 },
       emotion: getMimikSensor(interupsiKey),
       newCondition: currentCondition
     };
@@ -304,7 +304,7 @@ export const getPomodoroPayload = (
   return {
     instruction: sysPrompt,
     input: finalUserPrompt,
-    inferenceParams: { temperature: 0.55, topK: 50 },
+    inferenceParams: { temperature: 0.5, topK: 50 },
     emotion: getMimikWaktu(basePrompt)
   };
 };

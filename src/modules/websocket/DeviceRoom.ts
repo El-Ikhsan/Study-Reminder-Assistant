@@ -10,6 +10,7 @@ export class DeviceRoom {
   env: any
   audioStreams: Map<string, Uint8Array[]> = new Map()
   latestSensor: { temperature: number, lightLux: number, noiseLevel: number } = { temperature: 0, lightLux: 0, noiseLevel: 0 }
+  pendingAcks: Map<string, (value: any) => void> = new Map()
 
   constructor(state: DurableObjectState, env: any) { this.state = state; this.env = env }
 
@@ -31,13 +32,39 @@ export class DeviceRoom {
 
     if (request.method === 'POST' && url.pathname.endsWith('/internal/command')) {
       if (!deviceId) return new Response('Missing deviceId', { status: 400 })
-      const body = await request.text()
+      const bodyText = await request.text()
+      const bodyJson = JSON.parse(bodyText)
+      const commandType = bodyJson.type
+      const ackKey = `${deviceId}_${commandType}`
+
+
       let isDelivered = false
       for (const ws of this.state.getWebSockets()) {
         const data = ws.deserializeAttachment() as SessionAttachment | null
-        if (data && data.role === 'iot' && data.deviceId === deviceId) { ws.send(body); isDelivered = true }
+        if (data && data.role === 'iot' && data.deviceId === deviceId) { ws.send(bodyText); isDelivered = true }
       }
-      return new Response(JSON.stringify({ success: isDelivered }), { status: isDelivered ? 200 : 404 })
+
+      try {
+        await new Promise((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            this.pendingAcks.delete(ackKey)
+            reject(new Error("Timeout: Perangkat lambat merespons."))
+          }, 5000) // Waktu tunggu 5 detik
+
+          // Simpan fungsi 'resolve' ke dalam memori
+          this.pendingAcks.set(ackKey, (val) => {
+            clearTimeout(timeoutId)
+            resolve(val)
+          })
+        })
+
+        // Berhasil! Lanjut kirim 200 OK ke API Frontend
+        return new Response(JSON.stringify({ success: true }), { status: 200 })
+      } catch (err: any) {
+        // Gagal! ESP32 tidak menjawab, kirim 504 Timeout ke Frontend
+        return new Response(JSON.stringify({ error: err.message }), { status: 504 })
+      }
+
     }
 
     if (request.headers.get('Upgrade') === 'websocket') {
@@ -74,6 +101,15 @@ export class DeviceRoom {
       if (attachment.role === 'iot') {
         const data = JSON.parse(message)
         switch (data.type) {
+
+          case 'CMD_ACK':
+            const ackKey = `${attachment.deviceId}_${data.payload.command}`
+            const resolver = this.pendingAcks.get(ackKey)
+            if (resolver) {
+              resolver(true) // Lepaskan tahanan API (resolve promise)
+              this.pendingAcks.delete(ackKey)
+            }
+            break
           case 'TELEMETRY_UPDATE':
             this.latestSensor = {
               temperature: data.payload.temperature,

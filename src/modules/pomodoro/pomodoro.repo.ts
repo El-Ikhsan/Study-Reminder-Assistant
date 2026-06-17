@@ -5,38 +5,24 @@ import { ResponseError } from '@/utils/responseError'
 import { logger } from '@/utils/logger'
 
 export const createSession = async (data: {
-  id: string; deviceId: string; focusDuration: number; restDuration: number
-  targetCycles: number; media: 'Buku' | 'Laptop' | 'HP' | 'Komputer'
-  currentCycle: number; currentMode: 'fokus' | 'istirahat'
-  currentPhase: 'awal' | 'tengah' | 'akhir'
-  status: 'running' | 'paused' | 'completed' | 'cancelled'
+  id: string;
+  deviceId: string;
+  focusDuration: number;
+  restDuration: number;
+  targetCycles: number;
+  media: 'Buku' | 'Laptop' | 'HP' | 'Komputer';
+  currentCycle: number;
+  currentMode: 'fokus' | 'istirahat';
+  currentPhase: 'awal' | 'tengah' | 'akhir';
+  status: 'running' | 'paused' | 'completed' | 'cancelled';
+  startedAt?: Date; // ✨ Sinkronisasi waktu akurat dari service
 }) => {
   try {
     const db = getDb()
 
-    // 1. Buat Sesi Baru
+    // Langsung tembak ke database, murni tanpa embel-embel!
     await db.insert(pomodoroSessions).values(data)
 
-    // 2. ✨ LOGIKA HEMAT KUOTA BERBASIS SESI (Limit 30 Sesi) ✨
-    // Cek total sesi untuk alat ini
-    const result = await db.select({ total: count() })
-      .from(pomodoroSessions)
-      .where(eq(pomodoroSessions.deviceId, data.deviceId))
-
-    // Jika jumlah sesi menyentuh 40, buang sesi-sesi lama dan sisakan 30 terbaru
-    if (result[0].total >= 40) {
-      logger.info(`[PomodoroRepo] Memulai pembersihan sesi lama untuk ${data.deviceId}...`)
-      await db.run(sql`
-        DELETE FROM pomodoro_sessions 
-        WHERE device_id = ${data.deviceId} 
-        AND id NOT IN (
-          SELECT id FROM pomodoro_sessions 
-          WHERE device_id = ${data.deviceId} 
-          ORDER BY started_at DESC 
-          LIMIT 30
-        )
-      `)
-    }
   } catch (error) {
     logger.error('Gagal membuat sesi Pomodoro baru', error)
     throw new ResponseError(500, 'Terjadi kesalahan saat menyimpan sesi Pomodoro.')

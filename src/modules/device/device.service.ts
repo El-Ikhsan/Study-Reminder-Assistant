@@ -129,6 +129,7 @@ export const setBrightness = async (userId: string, deviceId: string, value: num
     throw new ResponseError(500, 'Gagal mengubah kecerahan. Pastikan perangkat Rinchan menyala dan terhubung ke WiFi.')
   }
 
+  await deviceRepo.updateDeviceData(deviceId, { brightness: value })
   logger.info(`[💡] Brightness diubah menjadi ${value}% untuk device ${deviceId}`)
   return { success: true, message: `Kecerahan berhasil diubah menjadi ${value}%.` }
 }
@@ -146,6 +147,7 @@ export const setVolume = async (userId: string, deviceId: string, value: number,
     throw new ResponseError(500, 'Gagal mengubah volume. Pastikan perangkat Rinchan menyala dan terhubung ke WiFi.')
   }
 
+  await deviceRepo.updateDeviceData(deviceId, { volume: value })
   logger.info(`[🔊] Volume diubah menjadi ${value}% untuk device ${deviceId}`)
   return { success: true, message: `Volume berhasil diubah menjadi ${value}%.` }
 }
