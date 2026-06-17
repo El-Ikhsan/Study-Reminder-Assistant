@@ -15,6 +15,7 @@ import wsRoutes from "@/modules/websocket/ws.routes"
 import pomodoroRoutes from "@/modules/pomodoro/pomodoro.routes"
 
 import userRoutes from '@/modules/user/user.routes'
+import preferencesRoutes from '@/modules/preferences/preferences.routes'
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -47,7 +48,8 @@ app.route("/api/auth", authRoutes)
 app.route('/api/user', userRoutes)
 app.route("/api/device", deviceRoutes)
 app.route("/api/ws", wsRoutes)
-app.route("/api/pomodoro", pomodoroRoutes) 
+app.route("/api/pomodoro", pomodoroRoutes)
+app.route("/api/preferences", preferencesRoutes)
 
 /* -------------------------------------------------------------------------- */
 /* System Routes                                                              */

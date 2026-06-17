@@ -76,9 +76,26 @@ export const refreshTokens = sqliteTable("refresh_tokens", {
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const userPomodoroPreferences = sqliteTable("user_pomodoro_preferences", {
+  id: text("id", { length: 36 }).primaryKey(),
+  userId: text("user_id", { length: 36 }).references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
+  focusDuration: integer("focus_duration").notNull().default(25),
+  breakDuration: integer("break_duration").notNull().default(5),
+  totalCycles: integer("total_cycles").notNull().default(4),
+  learningMedia: text("learning_media", { enum: ["Buku", "Laptop", "HP", "Komputer"] }).notNull().default("Laptop"),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .default(sql`(strftime('%s', 'now'))`)
+    .$onUpdate(() => new Date()),
+
+});
+
+export const usersRelations = relations(users, ({ many, one }) => ({
   devices: many(devices),
   refreshTokens: many(refreshTokens),
+  pomodoroPreferences: one(userPomodoroPreferences, {
+    fields: [users.id],
+    references: [userPomodoroPreferences.userId],
+  }),
 }));
 
 export const devicesRelations = relations(devices, ({ one, many }) => ({
@@ -115,6 +132,13 @@ export const aiSensorLogsRelations = relations(aiSensorLogs, ({ one }) => ({
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
   user: one(users, {
     fields: [refreshTokens.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userPomodoroPreferencesRelations = relations(userPomodoroPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPomodoroPreferences.userId],
     references: [users.id],
   }),
 }));
