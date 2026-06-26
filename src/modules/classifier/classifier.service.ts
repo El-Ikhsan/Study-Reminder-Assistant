@@ -35,16 +35,16 @@ const SENSOR_EMOTIONS: Record<string, string[]> = {
   "Interupsi: Cahaya Silau": ["GLARE"],
 
   // Transisi (Pemulihan ke Kondisi Optimal)
-  "Transisi: Suhu Panas ke Sejuk": ["RECOVERY"],
-  "Transisi: Suhu Panas ke Hangat": ["RECOVERY"],
-  "Transisi: Suhu Dingin Extrem ke Sejuk": ["RECOVERY"],
-  "Transisi: Suhu Dingin Extrem ke Dingin": ["RECOVERY"],
-  "Transisi: Suara Bising ke Ramai": ["RECOVERY"],
-  "Transisi: Suara Bising ke Normal": ["RECOVERY"],
-  "Transisi: Suara Bising ke Sunyi": ["RECOVERY"],
-  "Transisi: Cahaya Gelap ke Redup": ["RECOVERY"],
-  "Transisi: Cahaya Gelap ke Terang": ["RECOVERY"],
-  "Transisi: Cahaya Silau ke Terang": ["RECOVERY"]
+  "Transisi: Suhu Panas ke Sejuk": ["SMILE"],
+  "Transisi: Suhu Panas ke Hangat": ["SMILE"],
+  "Transisi: Suhu Dingin Extrem ke Sejuk": ["SMILE"],
+  "Transisi: Suhu Dingin Extrem ke Dingin": ["SMILE"],
+  "Transisi: Suara Bising ke Ramai": ["SMILE"],
+  "Transisi: Suara Bising ke Normal": ["SMILE"],
+  "Transisi: Suara Bising ke Sunyi": ["SMILE"],
+  "Transisi: Cahaya Gelap ke Redup": ["SMILE"],
+  "Transisi: Cahaya Gelap ke Terang": ["SMILE"],
+  "Transisi: Cahaya Silau ke Terang": ["SMILE"]
 };
 
 const TIME_EMOTIONS: Record<string, string[]> = {
@@ -53,11 +53,11 @@ const TIME_EMOTIONS: Record<string, string[]> = {
   "Pomodoro: Fase Pertengahan Fokus": ["IDLE"],
   "Pomodoro: Fase Akhir Fokus": ["IDLE"],
 
-  // Pomodoro Istirahat (Cocok menggunakan GIF Pemulihan)
-  "Pomodoro: Fase Istirahat Pendek": ["RECOVERY"],
-  "Pomodoro: Fase Istirahat Panjang": ["RECOVERY"],
+  // Pomodoro Istirahat (Cocok menggunakan GIF Smile)
+  "Pomodoro: Fase Istirahat Pendek": ["SMILE"],
+  "Pomodoro: Fase Istirahat Panjang": ["SMILE"],
   "Pomodoro: Fase Peringatan Istirahat Akhir": ["IDLE"],
-  "Pomodoro: Sesi Selesai": ["RECOVERY", "IDLE"]
+  "Pomodoro: Sesi Selesai": ["SMILE", "IDLE"]
 };
 
 const getMimikSensor = (key: string): string => {

@@ -1,6 +1,6 @@
 import { getDb } from '@/db/client'
-import { pomodoroSessions, aiPomodoroLogs, aiSensorLogs } from '@/db/schema'
-import { eq, sql, count } from 'drizzle-orm'
+import { pomodoroSessions, aiPomodoroLogs, aiSensorLogs, devices } from '@/db/schema'
+import { eq, inArray, desc, sql, count } from 'drizzle-orm'
 import { ResponseError } from '@/utils/responseError'
 import { logger } from '@/utils/logger'
 
@@ -46,9 +46,12 @@ export const findSensorLogsBySessionId = async (sessionId: string) => {
   return await db.select().from(aiSensorLogs).where(eq(aiSensorLogs.sessionId, sessionId))
 }
 
-export const findAllPomodoroSessions = async () => {
+export const findAllPomodoroSessions = async (userId: string) => {
   const db = getDb()
-  return await db.select().from(pomodoroSessions)
+  const userDevices = await db.select({ id: devices.id }).from(devices).where(eq(devices.userId, userId))
+  const deviceIds = userDevices.map(d => d.id)
+  if (deviceIds.length === 0) return []
+  return await db.select().from(pomodoroSessions).where(inArray(pomodoroSessions.deviceId, deviceIds)).orderBy(desc(pomodoroSessions.startedAt))
 }
 
 export const findPomodoroSessionById = async (sessionId: string) => {

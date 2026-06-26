@@ -80,8 +80,8 @@ export const getPomodoroHistoryById = async (pomodoroId: string) => {
   return { pomodoroLogs, sensorLogs }
 }
 
-export const getAllPomodoroSessions = async () => {
-  return await pomodoroRepo.findAllPomodoroSessions()
+export const getAllPomodoroSessions = async (userId: string) => {
+  return await pomodoroRepo.findAllPomodoroSessions(userId)
 }
 
 export const deletePomodoroById = async (pomodoroId: string) => {
