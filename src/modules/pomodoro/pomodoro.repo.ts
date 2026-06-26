@@ -11,10 +11,6 @@ export const createSession = async (data: {
   restDuration: number;
   targetCycles: number;
   media: 'Buku' | 'Laptop' | 'HP' | 'Komputer';
-  currentCycle: number;
-  currentMode: 'fokus' | 'istirahat';
-  currentPhase: 'awal' | 'tengah' | 'akhir';
-  status: 'running' | 'paused' | 'completed' | 'cancelled';
   startedAt?: Date; // ✨ Sinkronisasi waktu akurat dari service
 }) => {
   try {
@@ -29,7 +25,7 @@ export const createSession = async (data: {
   }
 }
 
-export const updateSessionStatus = async (sessionId: string, newStatus: 'running' | 'paused' | 'completed' | 'cancelled') => {
+export const updateSessionStatus = async (sessionId: string, newStatus: 'running' | 'completed' | 'stopped') => {
   try {
     const db = getDb()
     await db.update(pomodoroSessions).set({ status: newStatus }).where(eq(pomodoroSessions.id, sessionId))

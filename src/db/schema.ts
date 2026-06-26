@@ -21,7 +21,7 @@ export const devices = sqliteTable("devices", {
   tokenVersion: integer("token_version").notNull().default(1),
   brightness: integer("brightness").notNull().default(50),
   volume: integer("volume").notNull().default(50),
-  status: text("status", { enum: ["claimed", "unclaimed"] }).default("unclaimed"),
+  status: text("status", { length: 9, enum: ["claimed", "unclaimed"] }).default("unclaimed"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer("updated_at", { mode: "timestamp" })
     .default(sql`(strftime('%s', 'now'))`)
@@ -34,11 +34,8 @@ export const pomodoroSessions = sqliteTable("pomodoro_sessions", {
   focusDuration: integer("focus_duration").notNull(),
   restDuration: integer("rest_duration").notNull(),
   targetCycles: integer("target_cycles").notNull(),
-  media: text("media", { enum: ["Buku", "Laptop", "HP", "Komputer"] }).notNull().default("Laptop"),
-  currentCycle: integer("current_cycle").default(1),
-  currentMode: text("current_mode", { enum: ["fokus", "istirahat"] }).default("fokus"),
-  currentPhase: text("current_phase", { enum: ["awal", "tengah", "akhir"] }).default("awal"),
-  status: text("status", { enum: ["running", "paused", "completed", "cancelled"] }).default("running"),
+  media: text("learning_media", { length: 8, enum: ["Buku", "Laptop", "HP", "Komputer"] }).notNull().default("Laptop"),
+  status: text("status", { length: 9, enum: ["running", "completed", "stopped"] }).default("running"),
   startedAt: integer("started_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
   endedAt: integer("ended_at", { mode: "timestamp" }),
 });
@@ -46,9 +43,8 @@ export const pomodoroSessions = sqliteTable("pomodoro_sessions", {
 export const aiPomodoroLogs = sqliteTable("ai_pomodoro_logs", {
   id: text("id", { length: 36 }).primaryKey(),
   sessionId: text("session_id", { length: 36 }).references(() => pomodoroSessions.id, { onDelete: "cascade" }).notNull(),
-  logType: text("log_type", { enum: ["phase_alert", "voice_chat", "system_alert"] }).notNull(),
   currentCycle: integer("current_cycle").notNull(),
-  pomodoroMode: text("pomodoro_mode", { enum: ["fokus", "istirahat"] }).notNull(),
+  pomodoroMode: text("pomodoro_mode", { length: 9, enum: ["fokus", "istirahat"] }).notNull(),
   triggerContext: text("trigger_context").notNull(),
   aiResponse: text("ai_response").notNull(),
   emotion: text("emotion", { length: 20 }).notNull(),
@@ -58,7 +54,7 @@ export const aiPomodoroLogs = sqliteTable("ai_pomodoro_logs", {
 export const aiSensorLogs = sqliteTable("ai_sensor_logs", {
   id: text("id", { length: 36 }).primaryKey(),
   sessionId: text("session_id", { length: 36 }).references(() => pomodoroSessions.id, { onDelete: "cascade" }).notNull(),
-  eventType: text("event_type", { enum: ["interupsi", "pemulihan"] }).notNull(),
+  eventType: text("event_type", { length: 9, enum: ["interupsi", "pemulihan"] }).notNull(),
   triggerContext: text("trigger_context").notNull(),
   aiResponse: text("ai_response").notNull(),
   emotion: text("emotion", { length: 20 }).notNull(),
@@ -82,11 +78,11 @@ export const userPomodoroPreferences = sqliteTable("user_pomodoro_preferences", 
   focusDuration: integer("focus_duration").notNull().default(25),
   breakDuration: integer("break_duration").notNull().default(5),
   totalCycles: integer("total_cycles").notNull().default(4),
-  learningMedia: text("learning_media", { enum: ["Buku", "Laptop", "HP", "Komputer"] }).notNull().default("Laptop"),
+  learningMedia: text("learning_media", { length: 8, enum: ["Buku", "Laptop", "HP", "Komputer"] }).notNull().default("Laptop"),
   updatedAt: integer("updated_at", { mode: "timestamp" })
     .default(sql`(strftime('%s', 'now'))`)
     .$onUpdate(() => new Date()),
-
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({

@@ -8,10 +8,6 @@ export const startPomodoroSchema = z.object({
     breakDuration: z.number().int().positive('Durasi istirahat harus lebih dari 0.'),
     cycles: z.number().int().positive('Jumlah siklus harus lebih dari 0.'),
     media: z.enum(['Buku', 'Laptop', 'HP', 'Komputer']),
-    currentCycle: z.number().int().positive().optional(),
-    currentMode: z.enum(['fokus', 'istirahat']).optional(),
-    currentPhase: z.enum(['awal', 'tengah', 'akhir']).optional(),
-    status: z.enum(['running', 'paused', 'completed', 'cancelled']).optional(),
   }),
 })
 

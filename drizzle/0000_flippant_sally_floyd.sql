@@ -1,9 +1,8 @@
 CREATE TABLE `ai_pomodoro_logs` (
 	`id` text(36) PRIMARY KEY NOT NULL,
 	`session_id` text(36) NOT NULL,
-	`log_type` text NOT NULL,
 	`current_cycle` integer NOT NULL,
-	`pomodoro_mode` text NOT NULL,
+	`pomodoro_mode` text(9) NOT NULL,
 	`trigger_context` text NOT NULL,
 	`ai_response` text NOT NULL,
 	`emotion` text(20) NOT NULL,
@@ -11,10 +10,10 @@ CREATE TABLE `ai_pomodoro_logs` (
 	FOREIGN KEY (`session_id`) REFERENCES `pomodoro_sessions`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE TABLE `ai_sensor_events` (
+CREATE TABLE `ai_sensor_logs` (
 	`id` text(36) PRIMARY KEY NOT NULL,
 	`session_id` text(36) NOT NULL,
-	`event_type` text NOT NULL,
+	`event_type` text(9) NOT NULL,
 	`trigger_context` text NOT NULL,
 	`ai_response` text NOT NULL,
 	`emotion` text(20) NOT NULL,
@@ -31,9 +30,11 @@ CREATE TABLE `devices` (
 	`user_id` text(36),
 	`device_name` text(20) DEFAULT 'Unnamed Device' NOT NULL,
 	`token_version` integer DEFAULT 1 NOT NULL,
-	`status` text DEFAULT 'unclaimed',
-	`last_seen` integer,
+	`brightness` integer DEFAULT 50 NOT NULL,
+	`volume` integer DEFAULT 50 NOT NULL,
+	`status` text(9) DEFAULT 'unclaimed',
 	`created_at` integer DEFAULT (strftime('%s', 'now')),
+	`updated_at` integer DEFAULT (strftime('%s', 'now')),
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
@@ -44,11 +45,8 @@ CREATE TABLE `pomodoro_sessions` (
 	`focus_duration` integer NOT NULL,
 	`rest_duration` integer NOT NULL,
 	`target_cycles` integer NOT NULL,
-	`media` text DEFAULT 'Laptop' NOT NULL,
-	`current_cycle` integer DEFAULT 1,
-	`current_mode` text DEFAULT 'fokus',
-	`current_phase` text DEFAULT 'awal',
-	`status` text DEFAULT 'running',
+	`learning_media` text(8) DEFAULT 'Laptop' NOT NULL,
+	`status` text(9) DEFAULT 'running',
 	`started_at` integer DEFAULT (strftime('%s', 'now')),
 	`ended_at` integer,
 	FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON UPDATE no action ON DELETE cascade
@@ -64,13 +62,27 @@ CREATE TABLE `refresh_tokens` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `refresh_tokens_token_unique` ON `refresh_tokens` (`token`);--> statement-breakpoint
+CREATE TABLE `user_pomodoro_preferences` (
+	`id` text(36) PRIMARY KEY NOT NULL,
+	`user_id` text(36) NOT NULL,
+	`focus_duration` integer DEFAULT 25 NOT NULL,
+	`break_duration` integer DEFAULT 5 NOT NULL,
+	`total_cycles` integer DEFAULT 4 NOT NULL,
+	`learning_media` text(8) DEFAULT 'Laptop' NOT NULL,
+	`updated_at` integer DEFAULT (strftime('%s', 'now')),
+	`created_at` integer DEFAULT (strftime('%s', 'now')),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `user_pomodoro_preferences_user_id_unique` ON `user_pomodoro_preferences` (`user_id`);--> statement-breakpoint
 CREATE TABLE `users` (
 	`id` text(36) PRIMARY KEY NOT NULL,
 	`email` text(70) NOT NULL,
 	`name` text(60) NOT NULL,
 	`password` text(255) NOT NULL,
 	`avatar_url` text(255),
-	`created_at` integer DEFAULT (strftime('%s', 'now'))
+	`created_at` integer DEFAULT (strftime('%s', 'now')),
+	`updated_at` integer DEFAULT (strftime('%s', 'now'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);

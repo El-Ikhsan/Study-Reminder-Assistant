@@ -160,7 +160,7 @@ export class DeviceRoom {
             break
 
           case 'SESSION_STOPPED':
-            await wsRepo.updateSessionStatusForDO(this.env, data.payload.sessionId, 'cancelled')
+            await wsRepo.updateSessionStatusForDO(this.env, data.payload.sessionId, 'stopped')
             break
 
           case 'AUDIO_STREAM_START':

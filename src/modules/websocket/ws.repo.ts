@@ -5,7 +5,6 @@ import { logger } from '@/utils/logger'
 
 export const saveAiPomodoroLogForDO = async (env: any, data: {
   sessionId: string;
-  logType: 'phase_alert' | 'voice_chat' | 'system_alert';
   currentCycle: number;
   pomodoroMode: 'fokus' | 'istirahat';
   triggerContext: string;
@@ -18,7 +17,7 @@ export const saveAiPomodoroLogForDO = async (env: any, data: {
       id: crypto.randomUUID(),
       ...data
     })
-    logger.debug(`[ws.repo] AI Pomodoro Log disimpan (Type: ${data.logType})`)
+    logger.debug(`[ws.repo] AI Pomodoro Log disimpan`)
   } catch (error) {
     logger.error(`[ws.repo] Gagal menyimpan AI Pomodoro Log untuk sesi ${data.sessionId}`, error)
   }
@@ -49,7 +48,7 @@ export const saveAiSensorEventForDO = async (env: any, data: {
 export const updateSessionStatusForDO = async (
   env: any,
   sessionId: string,
-  newStatus: 'running' | 'paused' | 'completed' | 'cancelled'
+  newStatus: 'running' | 'completed' | 'stopped'
 ) => {
   try {
     const db = getDbForDO(env)
@@ -63,21 +62,5 @@ export const updateSessionStatusForDO = async (
   }
 }
 
-export const updateSessionProgressForDO = async (
-  env: any,
-  sessionId: string,
-  cycle: number,
-  mode: 'fokus' | 'istirahat',
-  phase: 'awal' | 'tengah' | 'akhir'
-) => {
-  try {
-    const db = getDbForDO(env)
-    await db.update(pomodoroSessions)
-      .set({ currentCycle: cycle, currentMode: mode, currentPhase: phase })
-      .where(eq(pomodoroSessions.id, sessionId))
-
-    logger.debug(`[Dashboard State] Sesi ${sessionId} update ke: Siklus ${cycle}, ${mode}-${phase}`)
-  } catch (error) {
-    logger.error(`Gagal update state dashboard untuk sesi ${sessionId}`, error)
-  }
-}
+// updateSessionProgressForDO dihapus: kolom currentCycle, currentMode, currentPhase
+// tidak ada di schema pomodoroSessions. Progress dilacak via aiPomodoroLogs.

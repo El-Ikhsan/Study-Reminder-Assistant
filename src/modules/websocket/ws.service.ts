@@ -168,16 +168,12 @@ export const processPhaseReport = async (
   const promptLower = timePayload.input.toLowerCase(); // ✨ FIX: Ubah userPrompt menjadi input
   const phaseExtracted = promptLower.includes("awal") ? "awal" : promptLower.includes("tengah") ? "tengah" : "akhir"
 
-  // 1. UPDATE STATE UNTUK DASHBOARD WEB
-  await wsRepo.updateSessionProgressForDO(env, timeData.sessionId, timeData.currentCycle, timeData.mode, phaseExtracted as any)
-
-  // 2. REKAM KE HISTORY AI (tabel aiPomodoroLogs)
+  // 1. REKAM KE HISTORY AI (tabel aiPomodoroLogs)
   await wsRepo.saveAiPomodoroLogForDO(env, {
     sessionId: timeData.sessionId,
-    logType: 'phase_alert',
     currentCycle: timeData.currentCycle,
     pomodoroMode: timeData.mode,
-    triggerContext: timePayload.input, // ✨ FIX: Ubah userPrompt menjadi input
+    triggerContext: timePayload.input,
     aiResponse: rinchanText,
     emotion: mimikWajah
   })
@@ -216,10 +212,9 @@ export const processSessionCompleted = async (
 
   await wsRepo.saveAiPomodoroLogForDO(env, {
     sessionId: data.sessionId,
-    logType: 'system_alert',
     currentCycle: data.currentCycle,
     pomodoroMode: 'istirahat', // Mode akhir
-    triggerContext: timePayload.input, // ✨ FIX: Ubah userPrompt menjadi input
+    triggerContext: timePayload.input,
     aiResponse: rinchanText,
     emotion: timePayload.emotion
   });

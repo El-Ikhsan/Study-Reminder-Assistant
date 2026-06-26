@@ -37,10 +37,6 @@ export const startSession = async (deviceId: string, recipe: any, env: Bindings)
     restDuration: recipe.breakDuration,
     targetCycles: recipe.cycles,
     media: (recipe.media) as 'Buku' | 'Laptop' | 'HP' | 'Komputer',
-    currentCycle: recipe.currentCycle || 1,
-    currentMode: (recipe.currentMode || 'fokus') as 'fokus' | 'istirahat',
-    currentPhase: (recipe.currentPhase || 'awal') as 'awal' | 'tengah' | 'akhir',
-    status: (recipe.status || 'running') as 'running' | 'paused' | 'completed' | 'cancelled',
     // ✨ Pastikan schema repo kamu mendukung insert `startedAt` secara manual
     startedAt: exactStartTime
   })
@@ -62,11 +58,11 @@ export const stopSession = async (sessionId: string, deviceId: string, env: Bind
     throw new ResponseError(404, "Sesi tidak ditemukan di database.")
   }
 
-  if (currentSession.status === 'completed' || currentSession.status === 'cancelled') {
+  if (currentSession.status === 'completed' || currentSession.status === 'stopped') {
     throw new ResponseError(400, `Perintah ditolak. Sesi ini sudah berstatus: ${currentSession.status}.`)
   }
 
-  await pomodoroRepo.updateSessionStatus(sessionId, 'cancelled')
+  await pomodoroRepo.updateSessionStatus(sessionId, 'stopped')
 
   try {
     await sendToIoT(deviceId, "CMD_STOP_POMODORO", {}, env)

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "91599592-4f9d-4302-a294-6bd19a9c1d21",
+  "id": "1294e27c-74ee-483e-ab87-0854200df6df",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "ai_pomodoro_logs": {
@@ -21,13 +21,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "log_type": {
-          "name": "log_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "current_cycle": {
           "name": "current_cycle",
           "type": "integer",
@@ -37,7 +30,7 @@
         },
         "pomodoro_mode": {
           "name": "pomodoro_mode",
-          "type": "text",
+          "type": "text(9)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -92,8 +85,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "ai_sensor_events": {
-      "name": "ai_sensor_events",
+    "ai_sensor_logs": {
+      "name": "ai_sensor_logs",
       "columns": {
         "id": {
           "name": "id",
@@ -111,7 +104,7 @@
         },
         "event_type": {
           "name": "event_type",
-          "type": "text",
+          "type": "text(9)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -169,9 +162,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "ai_sensor_events_session_id_pomodoro_sessions_id_fk": {
-          "name": "ai_sensor_events_session_id_pomodoro_sessions_id_fk",
-          "tableFrom": "ai_sensor_events",
+        "ai_sensor_logs_session_id_pomodoro_sessions_id_fk": {
+          "name": "ai_sensor_logs_session_id_pomodoro_sessions_id_fk",
+          "tableFrom": "ai_sensor_logs",
           "tableTo": "pomodoro_sessions",
           "columnsFrom": [
             "session_id"
@@ -227,23 +220,40 @@
           "autoincrement": false,
           "default": 1
         },
+        "brightness": {
+          "name": "brightness",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 50
+        },
+        "volume": {
+          "name": "volume",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 50
+        },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "text(9)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": "'unclaimed'"
         },
-        "last_seen": {
-          "name": "last_seen",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(strftime('%s', 'now'))"
         },
-        "created_at": {
-          "name": "created_at",
+        "updated_at": {
+          "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -317,41 +327,17 @@
           "notNull": true,
           "autoincrement": false
         },
-        "media": {
-          "name": "media",
-          "type": "text",
+        "learning_media": {
+          "name": "learning_media",
+          "type": "text(8)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "'Laptop'"
         },
-        "current_cycle": {
-          "name": "current_cycle",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 1
-        },
-        "current_mode": {
-          "name": "current_mode",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'fokus'"
-        },
-        "current_phase": {
-          "name": "current_phase",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'awal'"
-        },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "text(9)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
@@ -461,6 +447,100 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "user_pomodoro_preferences": {
+      "name": "user_pomodoro_preferences",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text(36)",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "focus_duration": {
+          "name": "focus_duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 25
+        },
+        "break_duration": {
+          "name": "break_duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 5
+        },
+        "total_cycles": {
+          "name": "total_cycles",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 4
+        },
+        "learning_media": {
+          "name": "learning_media",
+          "type": "text(8)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Laptop'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(strftime('%s', 'now'))"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(strftime('%s', 'now'))"
+        }
+      },
+      "indexes": {
+        "user_pomodoro_preferences_user_id_unique": {
+          "name": "user_pomodoro_preferences_user_id_unique",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "user_pomodoro_preferences_user_id_users_id_fk": {
+          "name": "user_pomodoro_preferences_user_id_users_id_fk",
+          "tableFrom": "user_pomodoro_preferences",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "users": {
       "name": "users",
       "columns": {
@@ -501,6 +581,14 @@
         },
         "created_at": {
           "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(strftime('%s', 'now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
