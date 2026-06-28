@@ -155,15 +155,31 @@ export const analyzeEnvironment = (sensor: any) => {
     }
     else if (cleanLastCondition.includes("Cahaya")) {
       currentLabel = getLightString(lightLux);
-      // Pulih jika sudah tidak Gelap DAN tidak Silau (karena Senter HP)
-      if (currentLabel !== "Gelap" && currentLabel !== "Silau") {
+      // Pulih jika sudah membaik dari kondisi buruk sebelumnya
+      if (cleanLastCondition === "Cahaya Gelap" && currentLabel !== "Gelap") {
+        displayLabel = `Cahaya ${currentLabel}`;
+        isRecovered = true;
+      } else if (cleanLastCondition === "Cahaya Silau" && currentLabel !== "Silau") {
         displayLabel = `Cahaya ${currentLabel}`;
         isRecovered = true;
       }
     }
 
     if (isRecovered) {
-      const recoveryKey = `Transisi: ${cleanLastCondition} ke ${currentLabel}`;
+      let llmTargetLabel = currentLabel;
+
+      // ✨ FIX: Normalisasi overshoot agar sesuai dengan dataset training LLM
+      if (cleanLastCondition === "Suhu Panas" && currentLabel === "Dingin") llmTargetLabel = "Sejuk";
+      if (cleanLastCondition === "Suhu Dingin Extrem" && currentLabel === "Hangat") llmTargetLabel = "Sejuk";
+      if (cleanLastCondition === "Cahaya Gelap" && currentLabel === "Silau") llmTargetLabel = "Terang";
+      if (cleanLastCondition === "Cahaya Silau" && (currentLabel === "Redup" || currentLabel === "Gelap")) llmTargetLabel = "Terang";
+
+      const recoveryKey = `Transisi: ${cleanLastCondition} ke ${llmTargetLabel}`;
+
+      // ✨ Sinkronisasi UI IOT dengan pemahaman LLM
+      // Ambil prefix sensor (Suhu/Cahaya/Suara) dari kondisi terakhir
+      const categoryPrefix = cleanLastCondition.split(" ")[0]; 
+      const finalDisplayLabel = `${categoryPrefix} ${llmTargetLabel}`;
 
       const allowedTransitions = [
         "Transisi: Suhu Panas ke Hangat", "Transisi: Suhu Panas ke Sejuk",
@@ -195,7 +211,7 @@ export const analyzeEnvironment = (sensor: any) => {
           instruction: sysPrompt,
           inferenceParams: { temperature: 0.5, topK: 50 },
           emotion: getMimikSensor(recoveryKey),
-          newCondition: displayLabel
+          newCondition: finalDisplayLabel
         };
       }
     }
