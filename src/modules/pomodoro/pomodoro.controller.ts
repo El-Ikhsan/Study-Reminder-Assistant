@@ -42,8 +42,8 @@ export const deletePomodoroHistory = async (c: Context) => {
 }
 
 export const getAllPomodoro = async (c: Context) => {
-  const userId = c.get('userId')
-  const result = await getAllPomodoroSessions(userId)
+  const user = c.get('user')
+  const result = await getAllPomodoroSessions(user.userId)
 
   return c.json({
     success: true,
