@@ -76,7 +76,7 @@ const getMimikWaktu = (key: string): string => {
 // 🌡️ DETEKTOR KONDISI RUANGAN (SINGLE PRIORITY LOCK)
 // ============================================================================
 
-const getTempString = (t: number) => t >= 31 ? "Panas" : t >= 28 ? "Hangat" : t >= 22 ? "Sejuk" : "Dingin";
+const getTempString = (t: number) => t >= 31 ? "Panas" : t >= 28 ? "Hangat" : t >= 22 ? "Sejuk" : t >= 16 ? "Dingin" : "Dingin Extrem";
 const getLightString = (l: number) => l >= 700 ? "Silau" : l >= 150 ? "Terang" : l >= 50 ? "Redup" : "Gelap";
 const getNoiseString = (n: number) => n >= 80 ? "Bising" : n >= 65 ? "Ramai" : n >= 50 ? "Normal" : "Sunyi";
 
@@ -90,7 +90,8 @@ export const checkSensorCondition = (temperature: number, lightLux: number, nois
   let tempKey = "Suhu Sejuk"; let tempPoint = 3;
   if (temperature >= 31) { tempKey = "Suhu Panas"; tempPoint = 1; }
   else if (temperature >= 28 && temperature < 31) { tempKey = "Suhu Hangat"; tempPoint = 2; }
-  else if (temperature < 22) { tempKey = "Suhu Dingin Extrem"; tempPoint = 1; }
+  else if (temperature >= 16 && temperature < 22) { tempKey = "Suhu Dingin"; tempPoint = 2; }
+  else if (temperature < 16) { tempKey = "Suhu Dingin Extrem"; tempPoint = 1; }
 
   let noiseKey = "Suara Normal"; let noisePoint = 3;
   if (noiseLevel >= 80) { noiseKey = "Suara Bising"; noisePoint = 1; }
