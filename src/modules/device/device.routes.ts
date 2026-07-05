@@ -15,6 +15,7 @@ device.delete('/:deviceId', authMiddleware, deviceController.deleteDevice)
 // path for device settings (brightness & volume → IoT via WebSocket)
 device.post('/settings/brightness', authMiddleware, deviceController.setBrightness)
 device.post('/settings/volume', authMiddleware, deviceController.setVolume)
+device.post('/settings/sensor', authMiddleware, deviceController.setSensorToggle)
 
 // path for device iot
 device.get('/poll/:deviceIotId', deviceController.checkClaimStatus)

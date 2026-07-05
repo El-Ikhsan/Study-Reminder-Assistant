@@ -151,3 +151,20 @@ export const setVolume = async (userId: string, deviceId: string, value: number,
   logger.info(`[🔊] Volume diubah menjadi ${value}% untuk device ${deviceId}`)
   return { success: true, message: `Volume berhasil diubah menjadi ${value}%.` }
 }
+
+export const setSensorToggle = async (userId: string, deviceId: string, sensorType: 'temperature' | 'light' | 'noise', enabled: boolean, env: Bindings) => {
+  const device = await deviceRepo.findDeviceById(deviceId)
+
+  if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
+  if (device.userId !== userId) throw new ResponseError(403, 'Akses ditolak.')
+
+  try {
+    await sendToIoT(deviceId, 'CMD_TOGGLE_SENSOR', { sensor: sensorType, enabled }, env)
+  } catch (error: any) {
+    logger.error(`[Sensor] Gagal terhubung ke device ${deviceId}. Perangkat offline.`)
+    throw new ResponseError(500, 'Gagal mengubah pengaturan sensor. Pastikan perangkat Rinchan menyala dan terhubung ke WiFi.')
+  }
+
+  logger.info(`[🎛️] Sensor ${sensorType} pada device ${deviceId} disetel ke ${enabled}`)
+  return { success: true, message: `Sensor ${sensorType} berhasil ${enabled ? 'dinyalakan' : 'dimatikan'}.` }
+}

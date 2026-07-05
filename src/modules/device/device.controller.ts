@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { validateBody, validateParam } from '@/utils/validation'
 import * as deviceService from './device.service'
-import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema, deviceIdRouteParamSchema, setBrightnessSchema, setVolumeSchema, updateDeviceSchema } from './device.validation'
+import { claimDeviceSchema, claimStatusCheckSchema, deviceIdParamSchema, deviceIdRouteParamSchema, setBrightnessSchema, setVolumeSchema, updateDeviceSchema, setSensorToggleSchema } from './device.validation'
 
 export const checkClaimStatus = async (c: Context) => {
  const deviceIotIdData = validateParam(c, claimStatusCheckSchema)
@@ -72,5 +72,13 @@ export const setVolume = async (c: Context) => {
   const body = await validateBody(c, setVolumeSchema)
 
   const result = await deviceService.setVolume(user.userId, body.deviceId, body.value, c.env)
+  return c.json(result, 200)
+}
+
+export const setSensorToggle = async (c: Context) => {
+  const user = c.get('user')
+  const body = await validateBody(c, setSensorToggleSchema)
+
+  const result = await deviceService.setSensorToggle(user.userId, body.deviceId, body.sensorType, body.enabled, c.env)
   return c.json(result, 200)
 }

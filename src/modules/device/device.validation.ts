@@ -50,3 +50,11 @@ export const setVolumeSchema = z.object({
     .min(0, 'Volume minimal 0%.')
     .max(100, 'Volume maksimal 100%.'),
 })
+
+export const setSensorToggleSchema = z.object({
+  deviceId: z.string().length(36, 'ID perangkat harus 36 karakter.'),
+  sensorType: z.enum(['temperature', 'light', 'noise'], {
+    errorMap: () => ({ message: "Jenis sensor tidak valid. Pilih: 'temperature', 'light', atau 'noise'." }),
+  }),
+  enabled: z.boolean({ required_error: 'Status aktif/nonaktif harus disertakan.' }),
+})
