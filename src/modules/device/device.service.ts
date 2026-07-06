@@ -152,7 +152,7 @@ export const setVolume = async (userId: string, deviceId: string, value: number,
   return { success: true, message: `Volume berhasil diubah menjadi ${value}%.` }
 }
 
-export const setSensorToggle = async (userId: string, deviceId: string, sensorType: 'temperature' | 'light' | 'noise', enabled: boolean, env: Bindings) => {
+export const setSensorToggle = async (userId: string, deviceId: string, sensorType: 'temperature' | 'light' | 'noise' | 'force_cold', enabled: boolean, env: Bindings) => {
   const device = await deviceRepo.findDeviceById(deviceId)
 
   if (!device) throw new ResponseError(404, 'Perangkat tidak ditemukan.')
