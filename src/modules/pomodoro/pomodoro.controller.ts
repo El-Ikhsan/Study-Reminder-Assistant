@@ -1,6 +1,6 @@
 import { Context } from 'hono'
 import { ResponseError } from '@/utils/responseError'
-import { startSession, stopSession, getPomodoroHistoryById, deletePomodoroById, getAllPomodoroSessions } from './pomodoro.service'
+import { startSession, stopSession, getPomodoroHistoryById, deletePomodoroById, getAllPomodoroSessions, getUserStats } from './pomodoro.service'
 import { validateBody, validateParam } from '@/utils/validation'
 import { startPomodoroSchema, pomodoroIdParamSchema, stopPomodoroSchema } from './pomodoro.validation'
 
@@ -44,6 +44,23 @@ export const deletePomodoroHistory = async (c: Context) => {
 export const getAllPomodoro = async (c: Context) => {
   const user = c.get('user')
   const result = await getAllPomodoroSessions(user.userId)
+
+  return c.json({
+    success: true,
+    data: result,
+  }, 200)
+}
+
+export const getStats = async (c: Context) => {
+  const user = c.get('user')
+  
+  const rangeParam = c.req.query('range')
+  const range = (rangeParam === 'week' || rangeParam === 'month') ? rangeParam : 'week'
+  
+  const offsetParam = c.req.query('offset')
+  const offset = offsetParam ? parseInt(offsetParam, 10) : 0
+
+  const result = await getUserStats(user.userId, range, isNaN(offset) ? 0 : offset)
 
   return c.json({
     success: true,
