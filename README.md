@@ -1,11 +1,11 @@
-<h1 align="center">Study Reminder Assistant</h1>
+![Screenshot_20260907_125539](https://github.com/user-attachments/assets/809ba6a0-ce27-4e1e-9729-ef26bf137214)<h1 align="center">Study Reminder Assistant</h1>
 
 <div align="center">
   <p><em>Other repositories in this project ecosystem:</em></p>
   <h3>
-    <a href="https://github.com/El-Ikhsan/Rinchan-Frontend">Frontend</a>
+    <a href="https://github.com/El-Ikhsan/Study-Reminder-Assistant-Frontend">Frontend</a>
     <br>
-    <a href="https://github.com/El-Ikhsan/Rinchan-IOT">Firmware IoT</a>
+    <a href="https://github.com/El-Ikhsan/Study-Reminder-Assistant-IoT">Firmware IoT</a>
   </h3>
 </div> 
 
@@ -26,13 +26,18 @@
 
 <div align="center">
  
-[![Repo Size](https://img.shields.io/github/repo-size/El-Ikhsan/Rinchan?style=flat-square&color=blue)](https://github.com/El-Ikhsan/Rinchan)
-[![GitHub Issues](https://img.shields.io/github/issues/El-Ikhsan/Rinchan?style=flat-square&color=orange)](https://github.com/El-Ikhsan/Rinchan/issues)
+[![Repo Size](https://img.shields.io/github/repo-size/El-Ikhsan/Study-Reminder-Assistant?style=flat-square&color=blue)](https://github.com/El-Ikhsan/Study-Reminder-Assistant)
+[![GitHub Issues](https://img.shields.io/github/issues/El-Ikhsan/Study-Reminder-Assistant?style=flat-square&color=orange)](https://github.com/El-Ikhsan/Study-Reminder-Assistant/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 </div>
 
 ## Showcase
+
+<img width="1280" height="720" alt="dashboard" src="https://github.com/user-attachments/assets/8b31889e-31ce-4b7f-9628-858dd5cfd8cb" />
+<img width="1280" height="720" alt="booting" src="https://github.com/user-attachments/assets/43eb931a-443a-4a53-acc4-adcb0257d435" />
+<img width="1280" height="720" alt="pomodoro_on" src="https://github.com/user-attachments/assets/bbe7f4ed-2fb7-43bc-aee8-82587f743ffb" />
+<img width="1280" height="720" alt="respon_LLM" src="https://github.com/user-attachments/assets/967a314d-4626-479e-a1f9-7371c7480193" />
 
 ## What is it?
 
