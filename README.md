@@ -35,13 +35,13 @@
 ## Showcase
 
 <img alt="dashboard" src="https://github.com/user-attachments/assets/b6a561b9-40d4-4b9e-9d54-59dad12d0056" />
-<img width="1280" height="720" alt="booting" src="https://github.com/user-attachments/assets/110efed4-76e8-4729-9592-01c74a8245c9" />
+<img alt="booting" src="https://github.com/user-attachments/assets/110efed4-76e8-4729-9592-01c74a8245c9" />
 <img alt="pomodoro_on" src="https://github.com/user-attachments/assets/83787ce5-75ca-4ae1-a254-3f285ba71f53" />
 <img alt="respon_LLM" src="https://github.com/user-attachments/assets/e119bb2b-98cc-40ff-ac3f-e49caa1f1c20" />
 
 ## What is it?
 
-Study Reminder Assistant (Rin-chan) is an intelligent study companion system combining Pomodoro time management, environmental IoT sensor monitoring (temperature, light, and noise), and AI-driven interactions. This repository serves as the **Backend API & Real-time Service**, handling authentication, Pomodoro sessions, IoT device synchronization, environmental classification, and AI integrations.
+Study Reminder Assistant (Rinchan) is an intelligent study companion system combining Pomodoro time management, environmental IoT sensor monitoring (temperature, light, and noise), and AI-driven responses. This repository serves as the **Backend API & Real-time Service**, handling authentication, Pomodoro sessions, IoT device synchronization, environmental classification, and AI integrations.
 
 ## Features
 
@@ -49,7 +49,6 @@ Study Reminder Assistant (Rin-chan) is an intelligent study companion system com
 - Pomodoro timer management, status synchronization, and study history tracking.
 - Real-time two-way communication between web clients and IoT devices via WebSockets (Cloudflare Durable Objects).
 - IoT environmental sensor telemetry and smart classifier (maps temperature, light, and noise to device facial emotions).
-- AI voice transcription using Groq Whisper Speech-to-Text (STT) and LLM companion responses.
 - Object storage integration with Cloudflare R2 for user avatars and audio files.
 
 ## Tech Stack
@@ -83,8 +82,8 @@ bun add -g wrangler
 2. Clone the repository and enter the project directory.
 
 ```bash
-git clone https://github.com/El-Ikhsan/Rinchan.git
-cd Rinchan
+git clone https://github.com/El-Ikhsan/Study-Reminder-Assistant.git
+cd Study-Reminder-Assistant
 ```
 
 3. Install dependencies.
@@ -100,17 +99,38 @@ bun install
 cp .dev.vars.example .dev.vars
 ```
 
-5. Run migrations and seed data for local D1 database.
+5. Set up local D1 database, R2 bucket, and Durable Objects.
+
+The project uses the following Cloudflare resources for local development:
+
+* **D1 Database:** `dummy-db`, bound as `DB`
+* **R2 Bucket:** `dummy-bucket`, bound as `MY_BUCKET`
+* **Durable Object:** `DeviceRoom`, bound as `DEVICE_ROOM`
+
+The resource bindings are already configured in `wrangler.jsonc`.
+
+Create the local R2 bucket:
 
 ```bash
-bun run db:dev-migrate
-bun run seeds
+
+wrangler r2 bucket create dummy-bucket --local
+
 ```
 
-6. Start the development server.
+6. Run migrations for local D1 database.
 
 ```bash
+
+bun run db:dev-migrate
+
+```
+
+7. Start the development server.
+
+```bash
+
 bun run dev
+
 ```
 
 The server will be running at `http://localhost:8787`.

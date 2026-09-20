@@ -9,8 +9,6 @@ const envStringSchema = z.object({
   CORS_ORIGIN: z.string().default('*'),
   R2_PUBLIC_URL: z.string().min(1, "R2_PUBLIC_URL wajib diisi"),
   RINCHAN_MODEL_URL: z.string().min(1, "RINCHAN_MODEL_URL wajib diisi"),
-  STT_MODEL_URL: z.string().min(1, "STT_MODEL_URL wajib diisi"),
-  STT_MODEL_KEY: z.string().min(1, "STT_MODEL_KEY wajib diisi")
 })
 
 export type Bindings = z.infer<typeof envStringSchema> & {
