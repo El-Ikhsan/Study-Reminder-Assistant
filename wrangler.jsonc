@@ -9,19 +9,19 @@
 	"vars": {
 		"CORS_ORIGIN": "*",
 		"NODE_ENV": "production",
-		"R2_PUBLIC_URL": "https://pub-2f6c25df87d34b99b37b8bb898a5a1be.r2.dev"
+		"R2_PUBLIC_URL": "https://pub-dummy.r2.dev"
 	},
 	"r2_buckets": [
 		{
 			"binding": "MY_BUCKET",
-			"bucket_name": "rinchan-storage"
+			"bucket_name": "dummy-bucket"
 		},
 	],
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "rinchan-db",
-			"database_id": "a4d9c7c3-a247-48d6-8ba2-59d80e59730e",
+			"database_name": "dummy-db",
+			"database_id": "dummy-db-id",
 			"migrations_dir": "./drizzle"
 		}
 	],
