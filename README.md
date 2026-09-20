@@ -1,4 +1,4 @@
-![Screenshot_20260907_125539](https://github.com/user-attachments/assets/809ba6a0-ce27-4e1e-9729-ef26bf137214)<h1 align="center">Study Reminder Assistant</h1>
+<h1 align="center">Study Reminder Assistant</h1>
 
 <div align="center">
   <p><em>Other repositories in this project ecosystem:</em></p>
@@ -34,10 +34,10 @@
 
 ## Showcase
 
-<img width="1280" height="720" alt="dashboard" src="https://github.com/user-attachments/assets/8b31889e-31ce-4b7f-9628-858dd5cfd8cb" />
-<img width="1280" height="720" alt="booting" src="https://github.com/user-attachments/assets/43eb931a-443a-4a53-acc4-adcb0257d435" />
-<img width="1280" height="720" alt="pomodoro_on" src="https://github.com/user-attachments/assets/bbe7f4ed-2fb7-43bc-aee8-82587f743ffb" />
-<img width="1280" height="720" alt="respon_LLM" src="https://github.com/user-attachments/assets/967a314d-4626-479e-a1f9-7371c7480193" />
+<img alt="dashboard" src="https://github.com/user-attachments/assets/b6a561b9-40d4-4b9e-9d54-59dad12d0056" />
+<img width="1280" height="720" alt="booting" src="https://github.com/user-attachments/assets/110efed4-76e8-4729-9592-01c74a8245c9" />
+<img alt="pomodoro_on" src="https://github.com/user-attachments/assets/83787ce5-75ca-4ae1-a254-3f285ba71f53" />
+<img alt="respon_LLM" src="https://github.com/user-attachments/assets/e119bb2b-98cc-40ff-ac3f-e49caa1f1c20" />
 
 ## What is it?
 
