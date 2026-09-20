@@ -1,12 +1,12 @@
-<h1 align="center">Study Reminder Assistant</h1>
+<h1 align="center">Study Reminder Assistant - Backend</h1>
 
 <div align="center">
   <p><em>Other repositories in this project ecosystem:</em></p>
-  <h3>
+  <h4>
     <a href="https://github.com/El-Ikhsan/Study-Reminder-Assistant-Frontend">Frontend</a>
     <br>
     <a href="https://github.com/El-Ikhsan/Study-Reminder-Assistant-IoT">Firmware IoT</a>
-  </h3>
+  </h4>
 </div> 
 
 <div align="center">
