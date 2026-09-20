@@ -1,0 +1,20 @@
+# Environment Variables untuk Development Lokal (Cloudflare Workers)
+
+NODE_ENV="development"
+
+# JWT Secrets untuk Autentikasi
+JWT_SECRET="ganti-dengan-jwt-secret-yang-kuat-minimal-32-karakter"
+JWT_REFRESH_SECRET="ganti-dengan-jwt-refresh-secret-yang-berbeda-minimal-32-karakter"
+
+# CORS Configuration (* untuk semua origin atau sesuaikan dengan URL Frontend)
+CORS_ORIGIN="*"
+
+# Cloudflare R2 Storage Public URL (untuk development lokal atau custom domain R2)
+R2_PUBLIC_URL="http://localhost:8787/api/storage"
+
+# AI Inference & LLM Engine Endpoint
+RINCHAN_MODEL_URL="https://your-llm-service-url/api/ai/rinchan"
+
+# Groq Speech-to-Text (STT) Whisper API
+STT_MODEL_URL="https://api.groq.com/openai/v1/audio/transcriptions"
+STT_MODEL_KEY="gsk_your_groq_api_key_here"
