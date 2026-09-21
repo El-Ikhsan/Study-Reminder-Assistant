@@ -1,7 +1,7 @@
 <h1 align="center">Study Reminder Assistant - Backend</h1>
 
 <div align="center">
-  <p><em>Other repositories in this project ecosystem:</em></p>
+  <p><em>Other repositories in this project:</em></p>
   <h4>
     <a href="https://github.com/El-Ikhsan/Study-Reminder-Assistant-Frontend">Frontend</a>
     <br>
@@ -29,6 +29,9 @@
 [![Repo Size](https://img.shields.io/github/repo-size/El-Ikhsan/Study-Reminder-Assistant?style=flat-square&color=blue)](https://github.com/El-Ikhsan/Study-Reminder-Assistant)
 [![GitHub Issues](https://img.shields.io/github/issues/El-Ikhsan/Study-Reminder-Assistant?style=flat-square&color=orange)](https://github.com/El-Ikhsan/Study-Reminder-Assistant/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+![Hono](https://img.shields.io/badge/Hono-E36002.svg?style=flat-square&logo=hono&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat-square&logo=typescript&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020.svg?style=flat-square&logo=cloudflare&logoColor=white)
 
 </div>
 
